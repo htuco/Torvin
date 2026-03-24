@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import 'core/theme/app_theme.dart';
+
+const _designSize = Size(390, 844);
+const _pagePadding = EdgeInsets.all(20);
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const TorvinApp());
 }
 
@@ -9,44 +16,56 @@ class TorvinApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Torvin',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
-      home: const _BootstrapPage(),
+    return ScreenUtilInit(
+      designSize: _designSize,
+      minTextAdapt: true,
+      splitScreenMode: true,
+      child: const _ThemePreviewPage(),
+      builder: (_, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Torvin',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.system,
+          home: child,
+        );
+      },
     );
   }
 }
 
-class _BootstrapPage extends StatelessWidget {
-  const _BootstrapPage();
+class _ThemePreviewPage extends StatelessWidget {
+  const _ThemePreviewPage();
 
   @override
   Widget build(BuildContext context) {
-    
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text('Torvin'),
-      ),
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Project bootstrap is ready',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Feature-based architecture starts in next iteration.',
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: Padding(
+          padding: _pagePadding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.space_dashboard_rounded,
+                size: 56,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text('Torvin', style: theme.textTheme.headlineSmall),
+              const SizedBox(height: 8),
+              Text(
+                'Home screen placeholder',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
