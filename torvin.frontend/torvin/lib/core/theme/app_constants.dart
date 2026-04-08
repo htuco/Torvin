@@ -260,8 +260,8 @@ class AppConstants {
   
   /// Check if screen is tablet size
   static bool isTablet(double screenWidth) => 
-      screenWidth >= breakpointMobile && screenWidth < breakpointDesktop;
+      screenWidth >= breakpointMobile && screenWidth < breakpointTablet;
   
   /// Check if screen is desktop size
-  static bool isDesktop(double screenWidth) => screenWidth >= breakpointDesktop;
+    static bool isDesktop(double screenWidth) => screenWidth >= breakpointTablet;
 }

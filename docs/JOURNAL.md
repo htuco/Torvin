@@ -37,10 +37,10 @@ Mjesto za biljeske o avanturi razvoja aplikacije.
 
 ### [2026-03-23] Uklanjanje nepotrebnih distribucija
 - Kontekst: Fokus projekta je na ciljanim platformama, bez potrebe za dodatnim build targetima.
-- Danas uradjeno: Uklonjene nepotrebne distribucije aplikacije za Windows, Linux, macOS i Web.
+- Danas uradjeno: Uklonjene nepotrebne distribucije aplikacije za Windows, Linux i macOS, dok Web konfiguracija ostaje u projektu.
 - Problemi/blokade: Nema.
-- Rjesenje/odluke: Smanjen scope projekta i kompleksnost odrzavanja build konfiguracija.
-- Sljedece: Nastaviti razvoj na prioritetnim platformama prema planu.
+- Rjesenje/odluke: Smanjen scope projekta uklanjanjem desktop build targeta, uz zadrzavanje postojecih Web fajlova.
+- Sljedece: Nastaviti razvoj na prioritetnim platformama prema planu, uz kasniju odluku o potrebi punog Web targeta.
 
 ### [2026-03-23] Ciscenje default Flutter postavki
 - Kontekst: Prije uvodjenja feature-based arhitekture potrebno je ukloniti starter boilerplate.

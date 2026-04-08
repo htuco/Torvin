@@ -8,23 +8,23 @@ abstract final class AppRouter {
       case AppRoutes.root:
       case AppRoutes.dashboard:
         return MaterialPageRoute<void>(
-          settings: const RouteSettings(name: AppRoutes.dashboard),
+          settings: settings,
           builder: (_) => const _DashboardPlaceholder(),
         );
       case AppRoutes.login:
         return MaterialPageRoute<void>(
-          settings: const RouteSettings(name: AppRoutes.login),
+          settings: settings,
           builder: (_) => const _LoginPlaceholder(),
         );
       case AppRoutes.register:
         return MaterialPageRoute<void>(
-          settings: const RouteSettings(name: AppRoutes.register),
+          settings: settings,
           builder: (_) => const _RegisterPlaceholder(),
         );
       default:
         return MaterialPageRoute<void>(
-          settings: const RouteSettings(name: AppRoutes.dashboard),
-          builder: (_) => const _DashboardPlaceholder(),
+          settings: settings,
+          builder: (_) => _UnknownPlaceholder(routeName: settings.name),
         );
     }
   }
@@ -73,14 +73,20 @@ class _RegisterPlaceholder extends StatelessWidget {
 }
 
 class _UnknownPlaceholder extends StatelessWidget {
-  const _UnknownPlaceholder();
+  const _UnknownPlaceholder({this.routeName});
+
+  final String? routeName;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
       body: Center(
-        child: Text('Unknown route', style: theme.textTheme.titleLarge),
+        child: Text(
+          routeName == null ? 'Unknown route' : 'Unknown route: $routeName',
+          style: theme.textTheme.titleLarge,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
