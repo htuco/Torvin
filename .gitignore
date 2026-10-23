@@ -36,6 +36,8 @@ coverage*.xml
 **/android/app/profile/
 **/android/app/release/
 **/windows/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
 app.*.symbols
 app.*.map.json
 *.jks
