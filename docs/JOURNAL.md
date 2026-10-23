@@ -55,3 +55,10 @@ Mjesto za biljeske o avanturi razvoja aplikacije.
 - Problemi/blokade: Nema.
 - Rjesenje/odluke: Zadrzavamo debug build, ali bez vizuelnog debug bannera.
 - Sljedece: Nastaviti postavljanje feature-based arhitekture.
+
+### [2026-10-23] Sredjivanje repoa prije sprinta 0
+- Kontekst: Prelazak na novi Mac i pocetak ozbiljnog rada kroz PR-ove. Repo je imao .gitignore prepisan iz Flutter SDK repoa, koji je ignorisao i `pubspec.lock`.
+- Danas uradjeno: Novi .gitignore samo za ovaj repo (.NET, Flutter, .env, OS i IDE), `pubspec.lock` se sada prati, dodani `.editorconfig` i PR sablon, README prepisan na bosanski kao skelet.
+- Problemi/blokade: Na Macu je Flutter 3.47.5, a README je tvrdio 3.41.4. `flutter pub get` je sam dopisao izuzetke u `analysis_options.yaml`.
+- Rjesenje/odluke: Jedan root .gitignore umjesto posebnog u Flutter aplikaciji. U README ide samo ono sto stvarno radi, ostalo je oznaceno "u izradi".
+- Sljedece: Uskladiti `main` s `development`, ukljuciti zastitu grana na GitHubu, pa krenuti na strukturu frontenda i backend skelet.
