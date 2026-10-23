@@ -1,73 +1,58 @@
 # Torvin
 
-Torvin is a modern Flutter-based digital wallet application for securely storing payment cards and tracking transactions in a clean, intuitive interface.
+Torvin je platforma za upravljanje digitalnim novčanikom: virtualne kartice, interni transferi
+između korisnika, zahtjevi za novac, trajni nalozi, štednja, budžet po kategorijama i AI asistent
+za korisničku podršku. Platforma ne radi stvarno plaćanje. Balans postoji samo unutar sistema.
 
-## Development Setup
+Seminarski rad iz predmeta Razvoj softvera II, FIT.
+Autor: Hamza Tuco, IB230181.
 
-### Tool Versions (Locked)
-- Flutter: 3.41.4 (stable)
-- Dart: 3.11.1
-- Xcode: 26.3 (minimum for this setup)
+- **Mobilna aplikacija** (Flutter) je za korisnike.
+- **Desktop aplikacija** (Flutter, Windows) je za administratore.
+- **Backend** se sastoji od REST API-ja i zasebnog Worker servisa povezanih preko RabbitMQ-a,
+  nad SQL Server bazom.
 
-### Project Structure
-- Frontend (Flutter): torvin.frontend/torvin
-- Backend: torvin.backend
-- Documentation: docs
+## Pokretanje
 
-## Local Run (Frontend)
+### Backend (Docker)
 
-Run the app from the Flutter project folder:
+_U izradi._ Ovdje će biti komande za podizanje baze, RabbitMQ-a, API-ja i Workera kroz
+`docker compose`.
+
+### Mobilna aplikacija
+
+Trenutno postoji jedna Flutter aplikacija u `torvin.frontend/torvin`:
 
 ```bash
 cd torvin.frontend/torvin
 flutter pub get
-flutter devices
 flutter run
 ```
 
-For iOS simulator specifically:
+Povezivanje s API-jem (`--dart-define=API_BASE_URL=...`) je _u izradi_.
 
-```bash
-open -a Simulator
-cd torvin.frontend/torvin
-flutter run
-```
+### Desktop aplikacija
 
-## iOS Prerequisites
+_U izradi._
 
-1. Install and open Xcode at least once.
-2. Accept license and install required components.
-3. Set active developer directory:
+## Pristupni podaci
 
-```bash
-sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-sudo xcodebuild -runFirstLaunch
-```
+_U izradi._ Testni korisnici nastaju seedom baze:
 
-## iOS Simulator Quick Troubleshooting
+| Aplikacija | Korisničko ime | Lozinka |
+|---|---|---|
+| Desktop | `desktop` | `test` |
+| Mobilna | `mobile` | `test` |
 
-- Simulator not listed in Flutter:
+## Tehnologije
 
-```bash
-open -a Simulator
-flutter devices
-```
+- Flutter 3.47.5 (Dart 3.13.4)
+- Backend: ASP.NET Core Web API, Entity Framework Core, SQL Server, RabbitMQ (_u izradi_)
 
-- Xcode tools not configured correctly:
+## Struktura
 
-```bash
-xcode-select -p
-sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-```
-
-- CocoaPods issue for iOS build:
-
-```bash
-cd torvin.frontend/torvin/ios
-pod install
-cd ..
-cd ..
-flutter clean
-flutter pub get
-flutter run
-```
+| Folder | Sadržaj |
+|---|---|
+| `torvin.frontend/torvin` | Flutter aplikacija (tema i router) |
+| `torvin.backend` | Backend rješenje (_u izradi_) |
+| `docs` | Dnevnik razvoja (`JOURNAL.md`) i ERD |
