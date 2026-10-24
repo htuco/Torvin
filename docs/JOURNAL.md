@@ -62,3 +62,10 @@ Mjesto za biljeske o avanturi razvoja aplikacije.
 - Problemi/blokade: Na Macu je Flutter 3.47.5, a README je tvrdio 3.41.4. `flutter pub get` je sam dopisao izuzetke u `analysis_options.yaml`.
 - Rjesenje/odluke: Jedan root .gitignore umjesto posebnog u Flutter aplikaciji. U README ide samo ono sto stvarno radi, ostalo je oznaceno "u izradi".
 - Sljedece: Uskladiti `main` s `development`, ukljuciti zastitu grana na GitHubu, pa krenuti na strukturu frontenda i backend skelet.
+
+### [2026-10-24] Struktura frontenda: mobile, desktop, core
+- Kontekst: Upute traže dvije aplikacije (mobilna za korisnika, desktop za administratora) i jedan izvor teme i konfiguracije.
+- Danas uradjeno: `torvin` preimenovan u `torvin_mobile` (`git mv`), bundle id `ba.fit.torvin.mobile`, uklonjen `web/`. Kreiran `torvin_core` (tema, `AppConfig`) i `torvin_desktop` (Windows i macOS). Router prebačen na `go_router`.
+- Problemi/blokade: Tema je koristila `flutter_screenutil` (`.w`, `.h`, `.sp`), što ne ide u zajednički paket za desktop. `google_fonts` 9 nije radio s Flutterovim `TextTheme`.
+- Rjesenje/odluke: Konstante teme su obični brojevi, a `flutter_screenutil` je uklonjen jer ga niko ne koristi. `google_fonts` ostaje na 6.3. Riverpod stiže tek kad zatreba prvi provider.
+- Sljedece: Backend skelet (task 02), pa Docker i env.
