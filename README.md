@@ -21,19 +21,24 @@ _U izradi._ Ovdje će biti komande za podizanje baze, RabbitMQ-a, API-ja i Worke
 
 ### Mobilna aplikacija
 
-Trenutno postoji jedna Flutter aplikacija u `torvin.frontend/torvin`:
-
 ```bash
-cd torvin.frontend/torvin
+cd torvin.frontend/torvin_mobile
 flutter pub get
-flutter run
+flutter run --dart-define=API_BASE_URL=http://localhost:5000
 ```
 
-Povezivanje s API-jem (`--dart-define=API_BASE_URL=...`) je _u izradi_.
+Za Android emulator je adresa `http://10.0.2.2:5000`. Bez `API_BASE_URL` aplikacija pri startu
+javlja grešku.
 
 ### Desktop aplikacija
 
-_U izradi._
+```bash
+cd torvin.frontend/torvin_desktop
+flutter pub get
+flutter run -d macos --dart-define=API_BASE_URL=http://localhost:5000
+```
+
+Za predaju se pravi Windows build, a na Macu se razvija na macOS-u.
 
 ## Pristupni podaci
 
@@ -53,6 +58,8 @@ _U izradi._ Testni korisnici nastaju seedom baze:
 
 | Folder | Sadržaj |
 |---|---|
-| `torvin.frontend/torvin` | Flutter aplikacija (tema i router) |
+| `torvin.frontend/torvin_mobile` | Flutter mobilna aplikacija (korisnik) |
+| `torvin.frontend/torvin_desktop` | Flutter desktop aplikacija (administrator) |
+| `torvin.frontend/torvin_core` | Zajednički paket: tema i konfiguracija |
 | `torvin.backend` | Backend rješenje (_u izradi_) |
 | `docs` | Dnevnik razvoja (`JOURNAL.md`) i ERD |
