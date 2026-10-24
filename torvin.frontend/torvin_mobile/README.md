@@ -4,5 +4,5 @@ Torvin mobilna aplikacija za korisnike (Android za predaju, iOS za lokalni razvo
 
 ```bash
 flutter pub get
-flutter run --dart-define=API_BASE_URL=http://localhost:5000
+flutter run --dart-define=API_BASE_URL=http://localhost:5080
 ```
