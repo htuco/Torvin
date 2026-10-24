@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Torvin.API/Torvin.API.csproj" />
+  <Project Path="Torvin.Model/Torvin.Model.csproj" />
+  <Project Path="Torvin.Services/Torvin.Services.csproj" />
+  <Project Path="Torvin.Tests/Torvin.Tests.csproj" />
+  <Project Path="Torvin.Worker/Torvin.Worker.csproj" />
+</Solution>
