@@ -68,8 +68,13 @@ flutter pub get
 flutter run --dart-define=API_BASE_URL=http://localhost:5080
 ```
 
-Za Android emulator je adresa `http://10.0.2.2:5080`. Bez `API_BASE_URL` aplikacija pri startu
+Za Android emulator je adresa `http://10.0.2.2:5080`. Release APK smije zvati API preko `http`
+(`usesCleartextTraffic` u `AndroidManifest.xml`), jer lokalni API nema TLS. Bez `API_BASE_URL` aplikacija pri startu
 javlja grešku.
+
+Mobilna ima prijavu, registraciju s potvrdom emaila (kod stiže u Mailpit, `http://localhost:8025`), zaboravljenu
+lozinku i reset. Novi kod za potvrdu stiže pri pokušaju prijave nepotvrđenim računom. Prijava radi samo za korisnike,
+a administrator dobija poruku da koristi desktop aplikaciju.
 
 ### Desktop aplikacija
 
@@ -79,7 +84,9 @@ flutter pub get
 flutter run -d macos --dart-define=API_BASE_URL=http://localhost:5080
 ```
 
-Za predaju se pravi Windows build, a na Macu se razvija na macOS-u.
+Za predaju se pravi Windows build, a na Macu se razvija na macOS-u. Desktop prijava radi samo za
+administratore. Token se čuva u sigurnom skladištu sistema (Windows Credential Manager, macOS Keychain), a kad istekne ili
+bude opozvan, aplikacija se vrati na prijavu.
 
 ## Pristupni podaci
 
