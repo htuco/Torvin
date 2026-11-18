@@ -1,11 +1,17 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Torvin.API.Infrastructure;
+using Torvin.Model.Constants;
+using Torvin.Model.Messages;
 using Torvin.Model.Responses;
+using Torvin.Services.Database;
 using Torvin.Services.Security;
+using Torvin.Services.Services;
 
 namespace Torvin.Tests;
 
@@ -223,5 +229,47 @@ public class AuthApiTests(ApiFactory factory) : IClassFixture<ApiFactory>, IAsyn
 
         Assert.Equal(HttpStatusCode.NoContent, await Logout());
         Assert.Equal(HttpStatusCode.Unauthorized, await Logout());
+    }
+
+    [Fact]
+    public async Task Register_Returns201_AndIgnoresRoleFromBody()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/auth/register", new
+        {
+            firstName = "Haris", lastName = "Begić", username = "haris.api", email = "haris.api@torvin.local",
+            password = "Torvin.2026!", confirmPassword = "Torvin.2026!", role = AppRoles.Admin,
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(AuthService.Registered, (await response.Content.ReadFromJsonAsync<MessageResponse>())!.Message);
+        using var scope = factory.Services.CreateScope();
+        var user = await scope.ServiceProvider.GetRequiredService<TorvinDbContext>().Users
+            .Include(u => u.Role).SingleAsync(u => u.Username == "haris.api");
+        Assert.Equal(AppRoles.User, user.Role.Name);
+        Assert.Contains(factory.Publisher.Published, p => ((EmailRequested)p.Message).To == "haris.api@torvin.local");
+    }
+
+    [Fact]
+    public async Task VerifyEmail_WithWrongCodeFormat_Returns400WithFormatMessage()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/auth/verify-email", new { email = "a@torvin.local", code = "12345" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = (await response.Content.ReadFromJsonAsync<ErrorResponse>())!;
+        Assert.Equal(["Kod ima tačno 6 cifara."], body.Errors!["code"]);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ForUnknownEmail_Returns204()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/auth/forgot-password", new { email = "nepostojeci@torvin.local" });
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 }
