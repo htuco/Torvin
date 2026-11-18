@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Torvin.Services.Database;
 
 namespace Torvin.Tests;
@@ -10,5 +11,7 @@ internal static class TestDatabase
         new DbContextOptionsBuilder<TorvinDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .AddInterceptors(new SoftDeleteInterceptor(), new AuditFieldsInterceptor())
+            // Baza u memoriji nema transakcije; seed ih otvara zbog SQL Servera
+            .ConfigureWarnings(warnings => warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 }
