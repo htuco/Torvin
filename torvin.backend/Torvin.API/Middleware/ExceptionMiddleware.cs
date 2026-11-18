@@ -41,6 +41,7 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
         ValidationException validation => (StatusCodes.Status400BadRequest,
             new ErrorResponse(validation.Message, validation.Errors)),
         BusinessException business => (StatusCodes.Status400BadRequest, new ErrorResponse(business.Message)),
+        UnauthorizedException unauthorized => (StatusCodes.Status401Unauthorized, new ErrorResponse(unauthorized.Message)),
         ForbiddenException forbidden => (StatusCodes.Status403Forbidden, new ErrorResponse(forbidden.Message)),
         NotFoundException notFound => (StatusCodes.Status404NotFound, new ErrorResponse(notFound.Message)),
         _ => (StatusCodes.Status500InternalServerError, new ErrorResponse(GenericMessage)),

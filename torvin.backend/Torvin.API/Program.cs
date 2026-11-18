@@ -1,6 +1,9 @@
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Options;
 using Torvin.API.Infrastructure;
 using Torvin.API.Middleware;
+using Torvin.Services;
 using Torvin.Services.Configuration;
 using Torvin.Services.Database;
 
@@ -22,12 +25,27 @@ builder.Services.AddTorvinDatabase();
 builder.Services.AddJwtOptions();
 builder.Services.AddRabbitMqOptions();
 builder.Services.AddCorsOptions();
+builder.Services.AddTorvinServices();
+builder.Services.AddTorvinJwtAuthentication();
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        BosnianModelBindingMessages.Apply(options.ModelBindingMessageProvider);
+        // Obavezna polja su označena s [Required] i porukom na bosanskom. Bez ovoga bi ASP.NET sam dodao
+        // englesku poruku "The ... field is required." za svaki parametar koji nije nullable
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    })
     .ConfigureApiBehaviorOptions(options =>
-        options.InvalidModelStateResponseFactory = InvalidModelStateResponse.Create);
+        options.InvalidModelStateResponseFactory = InvalidModelStateResponse.Create)
+    .AddJsonOptions(options =>
+    {
+        // Enumi idu kao tekst ("Desktop"), a poruke parsera JSON-a (na engleskom) se ne prosljeđuju klijentu
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.AllowInputFormatterExceptionMessages = false;
+    });
+builder.Services.AddSingleton<IClientErrorFactory, ErrorResponseClientErrorFactory>();
 builder.Services.AddCors();
-builder.Services.AddSwaggerGen();
+builder.Services.AddTorvinSwagger();
 
 var app = builder.Build();
 
@@ -51,6 +69,9 @@ app.UseMiddleware<ExceptionMiddleware>();
 
 var corsOrigins = app.Services.GetRequiredService<IOptions<CorsOptions>>().Value.Origins;
 app.UseCors(policy => policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod());
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
