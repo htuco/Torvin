@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Torvin.Services.Configuration;
+using Torvin.Services.Seed;
 
 namespace Torvin.Services.Database;
 
@@ -27,6 +28,7 @@ public static class DatabaseExtensions
                 provider.GetRequiredService<AuditFieldsInterceptor>());
         });
 
+        services.AddScoped<DataSeeder>();
         services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
         return services;
     }
