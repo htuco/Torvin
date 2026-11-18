@@ -77,3 +77,9 @@ Mjesto za biljeske o avanturi razvoja aplikacije.
 - Rjesenje/odluke: Nema `/health` rute (anonimna ruta bi bila vidljiva izvana), liveness ide TCP healthcheckom u Dockeru. Jedan oblik greške `{ message, errors? }` za sve statuse, bez 422. API prijavljuje sve neispravne varijable odjednom.
 - Sljedece: Docker compose i `.env.example` (task 03).
 
+### [2026-11-18] Docker compose i .env
+- Kontekst: Upute traže da se cijeli sistem podiže jednom komandom, s Workerom kao zasebnim kontejnerom i konfiguracijom samo u `.env`.
+- Danas uradjeno: Dockerfile za API i Worker u dvije faze (SDK za build, manji runtime image za pokretanje, bez root korisnika). `docker-compose.yml` sa SQL Serverom, RabbitMQ-om, Mailpitom, API-jem i Workerom, s tačnim verzijama imagea i healthcheckovima. `.env.example` sa svim varijablama.
+- Problemi/blokade: Lozinka za bazu je stajala i u `SQL_SA_PASSWORD` i unutar `CONNECTION_STRING`, a upute kažu da se ista vrijednost ne piše na dva mjesta. SQL Server image ne postoji za ARM, pa na Macu ide kroz Rosettu.
+- Rjesenje/odluke: `CONNECTION_STRING` je zamijenjen sa `DB_HOST`, `DB_PORT` i `DB_NAME`, a lozinka je samo u `SQL_SA_PASSWORD`. Jedan `.env` je napisan za `localhost`, a compose kontejnerima sam zamijeni adrese u imena servisa. Baza je na računaru na portu 1401, da ne smeta SQL Serveru koji je možda već instaliran na 1433.
+- Sljedece: Model baze, migracija i seed (task 04).

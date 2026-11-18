@@ -16,13 +16,33 @@ Autor: Hamza Tuco, IB230181.
 
 ### Backend (Docker)
 
-_U izradi._ Ovdje će biti komande za podizanje baze, RabbitMQ-a, API-ja i Workera kroz
-`docker compose`.
+Treba Docker Desktop (na Macu s Apple Siliconom uključena Rosetta, jer SQL Server image postoji
+samo za amd64). Iz roota repoa:
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+docker compose ps
+```
+
+Podiže se pet servisa: `sqlserver`, `rabbitmq`, `mailpit`, `api` i `worker`. Prvi start traje
+nekoliko minuta jer se povlače imagei. API čeka da baza i RabbitMQ budu spremni.
+
+| Šta | Adresa |
+|---|---|
+| API (Swagger) | `http://localhost:5080/swagger` |
+| RabbitMQ UI | `http://localhost:15672` (korisnik i lozinka iz `.env`) |
+| Mailpit (pregled poslanih mailova) | `http://localhost:8025` |
+| SQL Server | `localhost,1401`, korisnik `sa`, lozinka iz `.env` |
+
+Zaustavljanje: `docker compose down`. Baza ostaje sačuvana u volumeu `sqlserver-data`, a briše je
+tek `docker compose down -v`.
 
 ### Backend (lokalno, bez Dockera)
 
-Treba .NET SDK 10 i fajl `.env` u rootu repoa s varijablama konfiguracije (`CONNECTION_STRING`, `JWT_*`, `RABBITMQ_*`,
-`SMTP_*`, `CORS_ORIGINS`, `API_PORT`). API i Worker ga u Development okruženju učitaju sami.
+Treba .NET SDK 10 i fajl `.env` u rootu repoa (`cp .env.example .env`). API i Worker ga u Development okruženju
+učitaju sami. Baza, RabbitMQ i Mailpit mogu ostati u Dockeru (`docker compose up -d sqlserver rabbitmq mailpit`),
+jer su vrijednosti u `.env` napisane za `localhost`.
 
 ```bash
 cd torvin.backend
