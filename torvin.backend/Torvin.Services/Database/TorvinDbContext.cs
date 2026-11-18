@@ -21,6 +21,8 @@ public class TorvinDbContext(DbContextOptions<TorvinDbContext> options) : DbCont
     public DbSet<Card> Cards => Set<Card>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionAnomaly> TransactionAnomalies => Set<TransactionAnomaly>();
+    public DbSet<ReversalRequest> ReversalRequests => Set<ReversalRequest>();
+    public DbSet<MoneyRequest> MoneyRequests => Set<MoneyRequest>();
     public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
