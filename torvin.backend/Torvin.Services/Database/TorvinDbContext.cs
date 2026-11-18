@@ -23,6 +23,11 @@ public class TorvinDbContext(DbContextOptions<TorvinDbContext> options) : DbCont
     public DbSet<TransactionAnomaly> TransactionAnomalies => Set<TransactionAnomaly>();
     public DbSet<ReversalRequest> ReversalRequests => Set<ReversalRequest>();
     public DbSet<MoneyRequest> MoneyRequests => Set<MoneyRequest>();
+    public DbSet<StandingOrder> StandingOrders => Set<StandingOrder>();
+    public DbSet<StandingOrderExecution> StandingOrderExecutions => Set<StandingOrderExecution>();
+    public DbSet<SavingsGoal> SavingsGoals => Set<SavingsGoal>();
+    public DbSet<SavingsMovement> SavingsMovements => Set<SavingsMovement>();
+    public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
