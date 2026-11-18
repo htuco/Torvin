@@ -83,12 +83,18 @@ Za predaju se pravi Windows build, a na Macu se razvija na macOS-u.
 
 ## Pristupni podaci
 
-_U izradi._ Testni korisnici nastaju seedom baze:
+Testni korisnici nastaju seedom baze pri prvom startu API-ja:
 
 | Aplikacija | Korisničko ime | Lozinka |
 |---|---|---|
 | Desktop | `desktop` | `test` |
 | Mobilna | `mobile` | `test` |
+
+Seed upisuje i još šest korisnika (lozinka `test`, jedan blokiran), kartice u svim statusima, oko 95
+transakcija kroz zadnjih 100 dana (i nekoliko današnjih), zahtjeve za novac i poništenja u svim stanjima, trajne naloge, štednju,
+budžete, notifikacije i obavijesti sa slikama. Datumi su računati od trenutka seedanja, pa "ovaj mjesec"
+uvijek ima podatke. Seed se pokreće samo kad u bazi nema korisnika, a ispočetka ga vraća
+`docker compose down -v && docker compose up -d --build`.
 
 ## Model baze
 
