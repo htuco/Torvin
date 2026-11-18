@@ -5,8 +5,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Torvin.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.13" />
+  </ItemGroup>
+
+  <!-- Microsoft.Data.SqlClient (preko EF SqlServer) povlači ranjiv Pkcs 9.0.11, pa se zakrpljena verzija navodi direktno -->
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
 </Project>
