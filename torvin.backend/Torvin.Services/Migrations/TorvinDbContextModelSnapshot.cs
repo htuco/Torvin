@@ -1412,6 +1412,7 @@ namespace Torvin.Services.Migrations
                         .HasColumnType("bit");
 
                     b.Property<int>("FailedLoginCount")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
 
                     b.Property<string>("FirstName")

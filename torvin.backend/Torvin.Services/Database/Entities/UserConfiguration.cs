@@ -14,6 +14,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.PhoneNumber).HasMaxLength(30);
         builder.Property(u => u.ProfileImageContentType).HasMaxLength(50);
 
+        // Istovremeni pogrešni pokušaji prijave: upis brojača uspijeva samo ako ga niko nije promijenio u međuvremenu
+        builder.Property(u => u.FailedLoginCount).IsConcurrencyToken();
+
         builder.HasIndex(u => u.Username).IsUnique();
         builder.HasIndex(u => u.Email).IsUnique();
 
