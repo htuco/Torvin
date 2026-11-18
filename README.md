@@ -127,6 +127,36 @@ Prijava ide preko `POST /auth/login` s korisničkim imenom ili emailom, lozinkom
   poruku, da odgovor ne otkriva koji računi postoje.
 - Greške 401 i 403 imaju isto tijelo kao ostale greške API-ja (`{ "message": ... }`).
 
+## Referentni podaci
+
+Svaka lista u API-ju je paginirana: `page` (od 1), `pageSize` (1–100, podrazumijevano 20) i `fts` za
+pretragu po nazivu i kodu. Odgovor je `{ items, totalCount, page, pageSize }`, a `pageSize` iznad 100 vraća 400.
+
+| Ruta | Šta | Dodatni filter |
+|---|---|---|
+| `/card-types` | tipovi kartica | — |
+| `/card-statuses` | statusi kartica | `code` |
+| `/currencies` | valute | `code` |
+| `/transaction-types` | tipovi transakcija | `code` |
+| `/transaction-statuses` | statusi transakcija | `code` |
+| `/transaction-categories` | kategorije transakcija | — |
+| `/roles` | role, samo čitanje | — |
+
+- `GET` liste i `GET /{id}` su za svakog prijavljenog korisnika, jer pune padajuće liste u obje aplikacije.
+  `POST`, `PUT /{id}` i `DELETE /{id}` su samo za administratora (ostali dobijaju 403).
+- Statusi, tipovi transakcija i valute imaju kod (`code`). On se zadaje samo pri kreiranju i poslije se ne
+  mijenja, jer se na njega veže logika. Sistemski statusi i tipovi (npr. `Active`, `Transfer`) se ne mogu
+  obrisati. Administrator može dodati novi status ili tip, ali on nema ponašanje dok ga kod (prelazi statusa)
+  ne uvede.
+- Zapis koji se koristi ne može se obrisati, a poruka kaže gdje se koristi, npr. "Valuta EUR se koristi i ne
+  može se obrisati (kartice: 2, transakcije: 3)." Broje se i mekano obrisani budžeti i ciljevi štednje, jer
+  red u bazi i dalje postoji.
+- **Role se samo čitaju.** Prava u kodu su vezana za tačno dvije role (`Admin` i `User`), pa nova rola ne bi
+  imala nikakvo dejstvo, a brisanje postojeće bi zaključalo sve njene korisnike. Lista služi za izbor role pri
+  upravljanju korisnicima.
+- Prva stranica bez pretrage i filtera (ono što puni dropdown) je keširana 10 minuta, a svaka izmjena preko
+  API-ja odmah poništi keš tog šifarnika. Pretraga uvijek ide u bazu.
+
 ## Model baze
 
 Baza se zove `230181` i ima 19 glavnih i 7 referentnih tabela. ERD je u `docs/Torvin - ERD.pdf`, a izvor
@@ -147,7 +177,7 @@ dijagrama je `docs/erd.mmd`.
 ## Tehnologije
 
 - Flutter 3.47.5 (Dart 3.13.4)
-- Backend: ASP.NET Core Web API, Entity Framework Core, SQL Server, RabbitMQ (API šalje, Worker obrađuje), MailKit
+- Backend: ASP.NET Core Web API, Entity Framework Core, Mapster, SQL Server, RabbitMQ (API šalje, Worker obrađuje), MailKit
 
 ## Struktura
 
