@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Torvin.Services.Database;
+using Torvin.Services.Seed;
 
 namespace Torvin.Tests;
 
@@ -30,7 +32,8 @@ public class DatabaseInitializerTests
         // Baza u memoriji ne podržava migracije, pa svaki pokušaj padne kao nedostupna baza
         await using var context = new TorvinDbContext(TestDatabase.CreateOptions());
         var logger = new WarningCounter<DatabaseInitializer>();
-        var initializer = new DatabaseInitializer(context, logger, TimeSpan.Zero);
+        var seeder = new DataSeeder(context, NullLogger<DataSeeder>.Instance);
+        var initializer = new DatabaseInitializer(context, seeder, logger, TimeSpan.Zero);
 
         await Assert.ThrowsAnyAsync<Exception>(() => initializer.InitializeAsync());
 
