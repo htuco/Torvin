@@ -30,6 +30,20 @@ public class OptionsValidationTests
     }
 
     [Fact]
+    public void MissingDatabaseVariables_ErrorNamesVariables()
+    {
+        using var provider = BuildProvider([], services => services.AddDatabaseOptions());
+
+        var exception = Assert.Throws<OptionsValidationException>(
+            () => provider.GetRequiredService<IOptions<DatabaseOptions>>().Value);
+
+        Assert.Contains("DB_HOST nije zadan.", exception.Message);
+        Assert.Contains("DB_PORT", exception.Message);
+        Assert.Contains("DB_NAME nije zadan.", exception.Message);
+        Assert.Contains("SQL_SA_PASSWORD nije zadan.", exception.Message);
+    }
+
+    [Fact]
     public void ShortJwtKey_ErrorDoesNotContainValue()
     {
         var variables = new Dictionary<string, string?>

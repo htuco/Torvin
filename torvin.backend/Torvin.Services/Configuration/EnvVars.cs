@@ -3,7 +3,10 @@ namespace Torvin.Services.Configuration;
 // Imena env varijabli na jednom mjestu: čitanje i poruke grešaka koriste iste konstante
 public static class EnvVars
 {
-    public const string ConnectionString = "CONNECTION_STRING";
+    public const string DbHost = "DB_HOST";
+    public const string DbPort = "DB_PORT";
+    public const string DbName = "DB_NAME";
+    public const string SqlSaPassword = "SQL_SA_PASSWORD";
 
     public const string JwtKey = "JWT_KEY";
     public const string JwtIssuer = "JWT_ISSUER";
