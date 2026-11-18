@@ -14,6 +14,7 @@ public static class ServiceExtensions
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ITokenRevocationService, TokenRevocationService>();
+        services.AddScoped<IEmailCodeService, EmailCodeService>();
         services.AddScoped<IAuthService, AuthService>();
         return services;
     }

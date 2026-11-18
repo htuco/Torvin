@@ -20,6 +20,8 @@
     <ProjectReference Include="..\Torvin.Model\Torvin.Model.csproj" />
     <ProjectReference Include="..\Torvin.Services\Torvin.Services.csproj" />
     <ProjectReference Include="..\Torvin.API\Torvin.API.csproj" />
+    <!-- Alias, jer i API i Worker imaju javnu klasu Program -->
+    <ProjectReference Include="..\Torvin.Worker\Torvin.Worker.csproj" Aliases="worker" />
   </ItemGroup>
 
 </Project>

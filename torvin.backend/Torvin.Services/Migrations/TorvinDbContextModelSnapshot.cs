@@ -456,6 +456,7 @@ namespace Torvin.Services.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AttemptCount")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
 
                     b.Property<int?>("CardId")
@@ -479,6 +480,7 @@ namespace Torvin.Services.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("datetime2");
 
                     b.Property<int>("UserId")

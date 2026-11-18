@@ -102,9 +102,27 @@ Prijava ide preko `POST /auth/login` s korisničkim imenom ili emailom, lozinkom
 `Mobile`). Desktop prima samo administratore, a mobilna samo korisnike. Odgovor sadrži JWT koji važi
 `JWT_EXPIRES_MINUTES` minuta. U Swaggeru se token zalijepi jednom preko dugmeta **Authorize**.
 
-- Svaki controller je zaštićen (`[Authorize]`). Anonimne su samo akcije auth toka: prijava, a uz registraciju
-  i potvrdu emaila, zaboravljenu lozinku i reset, jer bez njih korisnik ne može doći do prijave.
+- Svaki controller je zaštićen (`[Authorize]`). Anonimne su samo akcije auth toka, jer bez njih korisnik ne
+  može doći do prijave:
+
+  | Endpoint | Zašto je anonimno |
+  |---|---|
+  | `POST /auth/login` | korisnik još nema token |
+  | `POST /auth/register` | korisnik još nema račun |
+  | `POST /auth/verify-email` | dio registracije: bez potvrđenog emaila prijava nije moguća |
+  | `POST /auth/forgot-password` | korisnik bez lozinke ne može dobiti token |
+  | `POST /auth/reset-password` | isto, a promjenu odobrava kod iz maila |
+
 - `POST /auth/logout` opoziva token na serveru, pa isti token odmah dobija 401.
+- Registracija ne prima rolu: svaki novi račun je `User`, s nepotvrđenim emailom. Na email stiže šestocifreni
+  kod koji važi 15 minuta. Prijava prije potvrde vraća 403 i šalje novi kod (najviše jednom u minuti).
+- Zaboravljena lozinka uvijek vraća isti odgovor, i za email koji ne postoji. Kod za reset važi 30 minuta, a
+  nova lozinka ne smije biti jedna od zadnje tri. Uspješan reset otključava račun.
+- Kodovi su jednokratni, imaju najviše 5 pokušaja i u bazi su samo hashirani (PBKDF2, kao lozinke).
+- Lozinka ima 8–100 znakova, veliko i malo slovo, broj i specijalni znak, bez korisničkog imena i emaila.
+- Mailove šalje Worker: API objavi poruku u red `email`, a Worker je pošalje preko SMTP-a. Neuspjelo slanje
+  se ponavlja poslije 1, 2, 4 i 8 sekundi, a onda poruka ide u red `email.dlq` (vidi se u RabbitMQ UI-ju).
+  U razvoju svi mailovi stižu u Mailpit (`http://localhost:8025`). Cijeli tok je u `torvin.backend/Torvin.API/Torvin.API.http`.
 - Poslije 5 pogrešnih lozinki zaredom račun je zaključan 15 minuta. Pogrešno ime i pogrešna lozinka imaju istu
   poruku, da odgovor ne otkriva koji računi postoje.
 - Greške 401 i 403 imaju isto tijelo kao ostale greške API-ja (`{ "message": ... }`).
@@ -129,7 +147,7 @@ dijagrama je `docs/erd.mmd`.
 ## Tehnologije
 
 - Flutter 3.47.5 (Dart 3.13.4)
-- Backend: ASP.NET Core Web API, Entity Framework Core, SQL Server, RabbitMQ (_u izradi_)
+- Backend: ASP.NET Core Web API, Entity Framework Core, SQL Server, RabbitMQ (API šalje, Worker obrađuje), MailKit
 
 ## Struktura
 

@@ -14,8 +14,9 @@ RUN dotnet restore Torvin.slnx
 COPY . .
 RUN dotnet publish Torvin.Worker/Torvin.Worker.csproj -c Release --no-restore -o /app
 
-# Faza 2: samo objavljeni fajlovi u manjem runtime imageu, bez kompajlera
-FROM mcr.microsoft.com/dotnet/runtime:10.0
+# Faza 2: samo objavljeni fajlovi, bez kompajlera. Image je aspnet, ne runtime, jer Torvin.Services
+# (dijele ga API i Worker) koristi ASP.NET Core biblioteke, pa ih Worker mora imati pri pokretanju
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app .
 USER $APP_UID

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Torvin.Model.Constants;
 using Torvin.Model.Enums;
 using Torvin.Model.Exceptions;
+using Torvin.Model.Messages;
 using Torvin.Model.Requests;
 using Torvin.Services.Configuration;
 using Torvin.Services.Database;
@@ -36,11 +37,13 @@ public class AuthServiceTests
         return context;
     }
 
-    private static AuthService NewService(TorvinDbContext context) => new(
+    internal static AuthService NewService(TorvinDbContext context, FakeMessagePublisher? publisher = null) => new(
         context,
         new JwtTokenService(Options.Create(Jwt)),
         new TokenRevocationService(context, new MemoryCache(new MemoryCacheOptions())),
         new NoCurrentUser(),
+        new EmailCodeService(context),
+        publisher ?? new FakeMessagePublisher(),
         NullLogger<AuthService>.Instance);
 
     private static LoginRequest Login(string login, string password = TestUsers.Password, ClientApp app = ClientApp.Mobile) =>
@@ -133,9 +136,16 @@ public class AuthServiceTests
         await using var context = await NewContextAsync();
         await TestUsers.AddAsync(context, "amina", AppRoles.User, emailConfirmed: false);
 
-        var exception = await Assert.ThrowsAsync<ForbiddenException>(() => NewService(context).LoginAsync(Login("amina")));
+        var publisher = new FakeMessagePublisher();
+        var service = NewService(context, publisher);
 
-        Assert.Contains("Email nije potvrđen", exception.Message);
+        var exception = await Assert.ThrowsAsync<ForbiddenException>(() => service.LoginAsync(Login("amina")));
+        await Assert.ThrowsAsync<ForbiddenException>(() => service.LoginAsync(Login("amina")));
+
+        Assert.Equal(AuthService.EmailNotConfirmed, exception.Message);
+        // Druga prijava unutar 60 s ne šalje još jedan mail
+        var email = Assert.IsType<EmailRequested>(Assert.Single(publisher.Published).Message);
+        Assert.Equal("amina@torvin.local", email.To);
     }
 
     [Theory]
