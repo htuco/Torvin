@@ -28,6 +28,11 @@ public class TorvinDbContext(DbContextOptions<TorvinDbContext> options) : DbCont
     public DbSet<SavingsGoal> SavingsGoals => Set<SavingsGoal>();
     public DbSet<SavingsMovement> SavingsMovements => Set<SavingsMovement>();
     public DbSet<Budget> Budgets => Set<Budget>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<News> News => Set<News>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<FavoriteRecipient> FavoriteRecipients => Set<FavoriteRecipient>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
