@@ -16,6 +16,15 @@ public static class ServiceExtensions
         services.AddScoped<ITokenRevocationService, TokenRevocationService>();
         services.AddScoped<IEmailCodeService, EmailCodeService>();
         services.AddScoped<IAuthService, AuthService>();
+
+        services.AddSingleton<ReferenceDataCache>();
+        services.AddScoped<ICardTypeService, CardTypeService>();
+        services.AddScoped<ICardStatusService, CardStatusService>();
+        services.AddScoped<ICurrencyService, CurrencyService>();
+        services.AddScoped<ITransactionTypeService, TransactionTypeService>();
+        services.AddScoped<ITransactionStatusService, TransactionStatusService>();
+        services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
+        services.AddScoped<IRoleService, RoleService>();
         return services;
     }
 }
