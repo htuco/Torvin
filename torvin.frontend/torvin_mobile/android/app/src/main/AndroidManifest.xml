@@ -1,8 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Release build zove API preko mreže, a u emulatoru je to http://10.0.2.2:5080 (bez TLS-a) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="torvin"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
