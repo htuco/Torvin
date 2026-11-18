@@ -2,10 +2,12 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Options;
 using Torvin.API.Infrastructure;
+using Torvin.API.Messaging;
 using Torvin.API.Middleware;
 using Torvin.Services;
 using Torvin.Services.Configuration;
 using Torvin.Services.Database;
+using Torvin.Services.Messaging;
 
 DotEnvLoader.LoadIfDevelopment();
 
@@ -26,6 +28,7 @@ builder.Services.AddJwtOptions();
 builder.Services.AddRabbitMqOptions();
 builder.Services.AddCorsOptions();
 builder.Services.AddTorvinServices();
+builder.Services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
 builder.Services.AddTorvinJwtAuthentication();
 
 builder.Services.AddControllers(options =>
