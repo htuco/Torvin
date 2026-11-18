@@ -24,6 +24,21 @@ public class AuditFieldsInterceptorTests
     }
 
     [Fact]
+    public async Task AddedEntityWithCreatedAt_KeepsIt()
+    {
+        await using var context = new TorvinDbContext(TestDatabase.CreateOptions());
+        var past = new DateTime(2026, 8, 1, 9, 30, 0, DateTimeKind.Utc);
+
+        var category = NewCategory();
+        category.CreatedAt = past;
+        context.TransactionCategories.Add(category);
+        await context.SaveChangesAsync();
+
+        Assert.Equal(past, category.CreatedAt);
+        Assert.Equal(past, category.ModifiedAt);
+    }
+
+    [Fact]
     public async Task ModifiedEntity_UpdatesModifiedAtAndKeepsCreatedAt()
     {
         var options = TestDatabase.CreateOptions();

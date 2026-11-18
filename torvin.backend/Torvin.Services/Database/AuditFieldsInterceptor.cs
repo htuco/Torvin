@@ -31,8 +31,13 @@ public sealed class AuditFieldsInterceptor : SaveChangesInterceptor
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Entity.CreatedAt = now;
-                entry.Entity.ModifiedAt = now;
+                // Zadano vrijeme ostaje (seed upisuje historiju unazad), inače je to trenutak upisa
+                if (entry.Entity.CreatedAt == default)
+                {
+                    entry.Entity.CreatedAt = now;
+                }
+
+                entry.Entity.ModifiedAt = entry.Entity.CreatedAt;
             }
             else if (entry.State == EntityState.Modified)
             {
