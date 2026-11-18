@@ -11,7 +11,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     private static readonly Dictionary<string, string> Variables = new()
     {
         [EnvVars.ApiPort] = "5080",
-        [EnvVars.ConnectionString] = "Server=test;Database=test",
+        [EnvVars.DbHost] = "sqlserver-test",
+        [EnvVars.DbPort] = "1433",
+        [EnvVars.DbName] = "test",
+        [EnvVars.SqlSaPassword] = "test",
         [EnvVars.JwtKey] = "0123456789abcdef0123456789abcdef",
         [EnvVars.JwtIssuer] = "torvin-test",
         [EnvVars.JwtAudience] = "torvin-test",

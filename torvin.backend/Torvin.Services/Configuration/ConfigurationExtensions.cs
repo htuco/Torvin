@@ -8,7 +8,10 @@ public static class ConfigurationExtensions
     public static IServiceCollection AddDatabaseOptions(this IServiceCollection services) =>
         services.AddEnvOptions<DatabaseOptions>((o, c) =>
         {
-            o.ConnectionString = c[EnvVars.ConnectionString] ?? "";
+            o.Host = c[EnvVars.DbHost] ?? "";
+            o.Port = ReadInt(c, EnvVars.DbPort);
+            o.Name = c[EnvVars.DbName] ?? "";
+            o.Password = c[EnvVars.SqlSaPassword] ?? "";
         });
 
     public static IServiceCollection AddJwtOptions(this IServiceCollection services) =>

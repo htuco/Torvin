@@ -1,0 +1,91 @@
+# Podizanje: cp .env.example .env && docker compose up -d --build
+# Host portovi dolaze iz .env, a api i worker unutar Docker mreže servise zovu po imenu.
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04
+    # SQL Server image postoji samo za amd64, pa na Apple Siliconu ide kroz Rosettu
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD}
+    ports:
+      - "${DB_PORT}:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  rabbitmq:
+    image: rabbitmq:4.4.1-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  mailpit:
+    image: axllent/mailpit:v1.34.0
+    ports:
+      - "${SMTP_PORT}:1025"
+      - "8025:8025"
+
+  api:
+    build:
+      context: ./torvin.backend
+      dockerfile: Torvin.API/Dockerfile
+    env_file: .env
+    # Unutar Docker mreže servisi se zovu po imenu i slušaju na svojim standardnim portovima
+    environment:
+      DB_HOST: sqlserver
+      DB_PORT: "1433"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+    ports:
+      - "${API_PORT}:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    # Provjera da API sluša na portu 8080, bez otvorene /health rute
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/127.0.0.1/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  worker:
+    build:
+      context: ./torvin.backend
+      dockerfile: Torvin.Worker/Dockerfile
+    env_file: .env
+    environment:
+      DB_HOST: sqlserver
+      DB_PORT: "1433"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+volumes:
+  sqlserver-data:

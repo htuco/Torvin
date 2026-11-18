@@ -1,0 +1,9 @@
+# Build context je torvin.backend/: u image ne idu build artefakti ni tajne
+**/bin/
+**/obj/
+**/.env
+**/.env.*
+**/*.user
+**/TestResults/
+**/Dockerfile
+.dockerignore
