@@ -27,6 +27,7 @@ public static class InvalidModelStateResponse
             ? error.ErrorMessage
             : InvalidValueMessage;
 
+    // Greška iz JSON-a dolazi s putanjom "$.app", a klijent je traži pod imenom polja ("app")
     private static string ToCamelCase(string key) =>
-        string.Join('.', key.Split('.').Select(JsonNamingPolicy.CamelCase.ConvertName));
+        string.Join('.', key.TrimStart('$', '.').Split('.').Select(JsonNamingPolicy.CamelCase.ConvertName));
 }

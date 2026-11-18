@@ -96,6 +96,19 @@ budžete, notifikacije i obavijesti sa slikama. Datumi su računati od trenutka 
 uvijek ima podatke. Seed se pokreće samo kad u bazi nema korisnika, a ispočetka ga vraća
 `docker compose down -v && docker compose up -d --build`.
 
+## Prijava i sigurnost
+
+Prijava ide preko `POST /auth/login` s korisničkim imenom ili emailom, lozinkom i aplikacijom (`Desktop` ili
+`Mobile`). Desktop prima samo administratore, a mobilna samo korisnike. Odgovor sadrži JWT koji važi
+`JWT_EXPIRES_MINUTES` minuta. U Swaggeru se token zalijepi jednom preko dugmeta **Authorize**.
+
+- Svaki controller je zaštićen (`[Authorize]`). Anonimne su samo akcije auth toka: prijava, a uz registraciju
+  i potvrdu emaila, zaboravljenu lozinku i reset, jer bez njih korisnik ne može doći do prijave.
+- `POST /auth/logout` opoziva token na serveru, pa isti token odmah dobija 401.
+- Poslije 5 pogrešnih lozinki zaredom račun je zaključan 15 minuta. Pogrešno ime i pogrešna lozinka imaju istu
+  poruku, da odgovor ne otkriva koji računi postoje.
+- Greške 401 i 403 imaju isto tijelo kao ostale greške API-ja (`{ "message": ... }`).
+
 ## Model baze
 
 Baza se zove `230181` i ima 19 glavnih i 7 referentnih tabela. ERD je u `docs/Torvin - ERD.pdf`, a izvor

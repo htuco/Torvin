@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Torvin.Model.Constants;
 using Torvin.Services.Configuration;
 using Torvin.Services.Database;
 
@@ -11,6 +15,12 @@ namespace Torvin.Tests;
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
     public const string AllowedOrigin = "http://localhost:3000";
+    public const string AdminUsername = "admin.test";
+    public const string UserUsername = "korisnik.test";
+
+    private readonly string _databaseName = $"api-{Guid.NewGuid()}";
+    private readonly SemaphoreSlim _seedLock = new(1, 1);
+    private bool _seeded;
 
     private static readonly Dictionary<string, string> Variables = new()
     {
@@ -38,10 +48,47 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
     }
 
-    // Testovi nemaju SQL Server, pa se migracija pri startu preskače
+    // Testovi nemaju SQL Server: migracija se preskače, a baza je u memoriji. Kontroleri iz testnog
+    // projekta (zaštićeni endpointi za provjeru tokena i role) se dodaju samo ovdje
     protected override void ConfigureWebHost(IWebHostBuilder builder) =>
         builder.ConfigureTestServices(services =>
-            services.AddScoped<IDatabaseInitializer, NoOpDatabaseInitializer>());
+        {
+            services.AddScoped<IDatabaseInitializer, NoOpDatabaseInitializer>();
+
+            services.RemoveAll<DbContextOptions<TorvinDbContext>>();
+            services.RemoveAll<IDbContextOptionsConfiguration<TorvinDbContext>>();
+            services.AddDbContext<TorvinDbContext>((provider, options) => options
+                .UseInMemoryDatabase(_databaseName)
+                .AddInterceptors(
+                    provider.GetRequiredService<SoftDeleteInterceptor>(),
+                    provider.GetRequiredService<AuditFieldsInterceptor>()));
+
+            services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
+        });
+
+    // Role iz HasData i dva potvrđena korisnika s lozinkom TestUsers.Password
+    public async Task SeedUsersAsync()
+    {
+        await _seedLock.WaitAsync();
+        try
+        {
+            if (_seeded)
+            {
+                return;
+            }
+
+            using var scope = Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<TorvinDbContext>();
+            await context.Database.EnsureCreatedAsync();
+            await TestUsers.AddAsync(context, AdminUsername, AppRoles.Admin);
+            await TestUsers.AddAsync(context, UserUsername, AppRoles.User);
+            _seeded = true;
+        }
+        finally
+        {
+            _seedLock.Release();
+        }
+    }
 
     protected override void Dispose(bool disposing)
     {

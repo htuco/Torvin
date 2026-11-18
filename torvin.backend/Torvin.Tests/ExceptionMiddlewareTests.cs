@@ -42,6 +42,15 @@ public class ExceptionMiddlewareTests
     }
 
     [Fact]
+    public async Task UnauthorizedException_Returns401WithMessage()
+    {
+        var (statusCode, body) = await InvokeWithAsync(new UnauthorizedException());
+
+        Assert.Equal(StatusCodes.Status401Unauthorized, statusCode);
+        Assert.Contains("Prijavite se ponovo.", body);
+    }
+
+    [Fact]
     public async Task ForbiddenException_Returns403()
     {
         var (statusCode, _) = await InvokeWithAsync(new ForbiddenException("Nemate pristup."));

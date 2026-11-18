@@ -97,3 +97,10 @@ Mjesto za biljeske o avanturi razvoja aplikacije.
 - Problemi/blokade: Interceptor je svakom novom zapisu upisivao trenutno vrijeme, pa bi sve transakcije iz seeda imale današnji datum. Audit zapis treba ID kartice ili zahtjeva, a ID postoji tek poslije snimanja.
 - Rjesenje/odluke: Interceptor zadržava vrijeme nastanka ako je već zadano. Seed snima u dva koraka unutar jedne transakcije, pa ili upiše sve ili ništa. Balansi se ne upisuju ručno nego računaju iz početnog iznosa i historije, a seed puca ako bi ijedan bio negativan. Datumi idu od trenutka seedanja, da budžet "ovog mjeseca" i grafikoni imaju podatke i na dan odbrane. Slike su jednostavne ilustracije ugrađene u dll.
 - Sljedece: Autentifikacija (task 05).
+
+### [2026-11-18] Prijava i odjava preko JWT-a
+- Kontekst: Upute traže JWT, odjavu koja token stvarno poništi na serveru i zaštitu svakog endpointa. Desktop je samo za administratore, a mobilna za korisnike.
+- Danas uradjeno: Prijava korisničkim imenom ili emailom, s aplikacijom u zahtjevu. Odjava upiše token u listu opozvanih, a provjera ide kroz keš na svakom zahtjevu. Zaključavanje računa poslije 5 pogrešnih lozinki. 401 i 403 vraćaju istu poruku greške kao ostatak API-ja. Swagger ima dugme za token. 25 novih testova.
+- Problemi/blokade: ASP.NET je sam dodavao engleske poruke ("The request field is required.", greške JSON parsera), a greška za polje je stizala pod ključem `$.app`. Globalno pravilo "sve traži prijavu" bi nepostojeću rutu pretvorilo iz 404 u 401.
+- Rjesenje/odluke: Poruke frameworka su prevedene ili isključene, a ključ greške je ime polja. `[Authorize]` stoji na svakom controlleru, a test pada ako neki controller nema `[Authorize]`. Pogrešna lozinka je 400, a ne 401, jer 401 u aplikaciji znači "sesija je istekla". Enumi u JSON-u idu kao tekst.
+- Sljedece: Registracija s kodom na email i reset lozinke, s mailovima koje šalje Worker (drugi dio taska 05).
