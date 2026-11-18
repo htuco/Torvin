@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using Torvin.API.Infrastructure;
 using Torvin.API.Middleware;
 using Torvin.Services.Configuration;
+using Torvin.Services.Database;
 
 DotEnvLoader.LoadIfDevelopment();
 
@@ -17,6 +18,7 @@ if (int.TryParse(builder.Configuration[EnvVars.ApiPort], out var apiPort)
 
 builder.Services.AddApiOptions();
 builder.Services.AddDatabaseOptions();
+builder.Services.AddTorvinDatabase();
 builder.Services.AddJwtOptions();
 builder.Services.AddRabbitMqOptions();
 builder.Services.AddCorsOptions();
@@ -31,6 +33,12 @@ var app = builder.Build();
 
 // Prijavljuje sve neispravne varijable odjednom, a ne samo prvu na koju aplikacija naiđe
 app.Services.GetRequiredService<IStartupValidator>().Validate();
+
+// Migracije prije prvog zahtjeva: API ne prima zahtjeve dok baza nema aktuelnu šemu
+using (var scope = app.Services.CreateScope())
+{
+    await scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {

@@ -83,3 +83,10 @@ Mjesto za biljeske o avanturi razvoja aplikacije.
 - Problemi/blokade: Lozinka za bazu je stajala i u `SQL_SA_PASSWORD` i unutar `CONNECTION_STRING`, a upute kažu da se ista vrijednost ne piše na dva mjesta. SQL Server image ne postoji za ARM, pa na Macu ide kroz Rosettu.
 - Rjesenje/odluke: `CONNECTION_STRING` je zamijenjen sa `DB_HOST`, `DB_PORT` i `DB_NAME`, a lozinka je samo u `SQL_SA_PASSWORD`. Jedan `.env` je napisan za `localhost`, a compose kontejnerima sam zamijeni adrese u imena servisa. Baza je na računaru na portu 1401, da ne smeta SQL Serveru koji je možda već instaliran na 1433.
 - Sljedece: Model baze, migracija i seed (task 04).
+
+### [2026-11-18] Model baze i prva migracija
+- Kontekst: Upute traže bar 10 glavnih tabela, sve veze kroz EF konfiguraciju i bazu `230181` koju API sam kreira. Model pokriva sve iz prijave, a stari ERD je bio prije prijave.
+- Danas uradjeno: 19 glavnih i 7 referentnih tabela, svaka sa svojom konfiguracijom. `TorvinDbContext`, bazna klasa s vremenima nastanka i izmjene, interceptori za ta vremena i za meko brisanje. Migracija `InitialCreate` sa referentnim podacima, a API je primijeni pri startu. Novi ERD u `docs/` (izvor `erd.mmd`). 5 novih testova.
+- Problemi/blokade: SQL Server je odbio dva `SET NULL` FK-a iz transakcije prema karticama ("multiple cascade paths"). EF 10.0.15 je tražio novije Microsoft pakete, a SQL klijent je povukao paket s poznatom ranjivošću, pa build s `-warnaserror` nije prolazio.
+- Rjesenje/odluke: Kartica se ne briše nego ide u status `Closed`, pa FK ostaje bez kaskade, a transakcija i dalje pamti pošiljaoca i primaoca. Meko brisanje je samo na obavijestima, ciljevima štednje, budžetima i omiljenim primaocima, jer bi skriven korisnik sakrio i tuđu historiju transakcija. Statusi koje admin ne uređuje su enumi, a statusi iz prijave tabele s nepromjenjivim kodom. Svi EF paketi su na 10.0.13 kao ostali, a zakrpljen paket se navodi direktno. Balans ne može ispod nule i iznosi moraju biti pozitivni već u samoj bazi.
+- Sljedece: Demo podaci sa slikama (drugi dio taska 04), pa autentifikacija.

@@ -38,6 +38,9 @@ nekoliko minuta jer se povlače imagei. API čeka da baza i RabbitMQ budu spremn
 Zaustavljanje: `docker compose down`. Baza ostaje sačuvana u volumeu `sqlserver-data`, a briše je
 tek `docker compose down -v`.
 
+API se na bazu spaja kao `sa`, jer SQL Server kontejner ima samo tog korisnika, pa je lozinka zapisana samo
+jednom (`SQL_SA_PASSWORD`). Kontejner ima samopotpisan certifikat, pa veza koristi `TrustServerCertificate`.
+
 ### Backend (lokalno, bez Dockera)
 
 Treba .NET SDK 10 i fajl `.env` u rootu repoa (`cp .env.example .env`). API i Worker ga u Development okruženju
@@ -46,12 +49,14 @@ jer su vrijednosti u `.env` napisane za `localhost`.
 
 ```bash
 cd torvin.backend
+dotnet tool restore                    # dotnet-ef iz dotnet-tools.json, za migracije
 dotnet run --project Torvin.API
 dotnet run --project Torvin.Worker
 dotnet test Torvin.slnx
 ```
 
-Ako varijabla fali, aplikacija ne starta i ispiše koje varijable nedostaju. Swagger je na
+API pri startu sam primijeni migracije i kreira bazu `230181` ako ne postoji, pa baza mora biti
+podignuta prije API-ja. Ako varijabla fali, aplikacija ne starta i ispiše koje varijable nedostaju. Swagger je na
 `http://localhost:5080/swagger`. Port se zadaje varijablom `API_PORT` u `.env` (preporučeno 5080, jer port 5000 na macOS-u
 često zauzima AirPlay prijemnik).
 
@@ -84,6 +89,23 @@ _U izradi._ Testni korisnici nastaju seedom baze:
 |---|---|---|
 | Desktop | `desktop` | `test` |
 | Mobilna | `mobile` | `test` |
+
+## Model baze
+
+Baza se zove `230181` i ima 19 glavnih i 7 referentnih tabela. ERD je u `docs/Torvin - ERD.pdf`, a izvor
+dijagrama je `docs/erd.mmd`.
+
+- **Referentni podaci su tabele** koje administrator uređuje: tipovi i statusi kartica, valute, tipovi i
+  statusi transakcija i kategorije. Statusi i tipovi koje koristi logika imaju nepromjenjiv `Code`, a
+  administrator mijenja naziv i opis.
+- **Stanja procesa su enumi**: status zahtjeva za novac, poništenja i trajnog naloga, učestalost naloga, tip
+  notifikacije. Prelaze između njih određuje kod, pa nova vrijednost koju bi dodao administrator ne bi imala
+  ponašanje. U bazi su broj s ograničenjem na dozvoljene vrijednosti.
+- **Ništa iz historije se ne briše.** Korisnik i kartica mijenjaju status (blokiran, zatvorena), a transakcija
+  se ispravlja korektivnom transakcijom. Meko brisanje (`IsDeleted`) imaju samo obavijesti, ciljevi štednje,
+  budžeti i omiljeni primaoci. Referentni zapis koji se koristi baza ne da obrisati.
+- Novac je `decimal(19,4)`, a balans kartice ne može ispod nule ni u samoj bazi. Od broja kartice čuvaju se
+  samo zadnje 4 cifre, a lozinke i kodovi samo kao hash. Sva vremena su UTC.
 
 ## Tehnologije
 
