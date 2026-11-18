@@ -14,6 +14,12 @@ public class TorvinDbContext(DbContextOptions<TorvinDbContext> options) : DbCont
     public DbSet<TransactionStatus> TransactionStatuses => Set<TransactionStatus>();
     public DbSet<TransactionCategory> TransactionCategories => Set<TransactionCategory>();
 
+    // Glavne tabele
+    public DbSet<User> Users => Set<User>();
+    public DbSet<UserPassword> UserPasswords => Set<UserPassword>();
+    public DbSet<EmailToken> EmailTokens => Set<EmailToken>();
+    public DbSet<Card> Cards => Set<Card>();
+    public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TorvinDbContext).Assembly);
