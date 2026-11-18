@@ -69,3 +69,11 @@ Mjesto za biljeske o avanturi razvoja aplikacije.
 - Problemi/blokade: Tema je koristila `flutter_screenutil` (`.w`, `.h`, `.sp`), što ne ide u zajednički paket za desktop. `google_fonts` 9 nije radio s Flutterovim `TextTheme`.
 - Rjesenje/odluke: Konstante teme su obični brojevi, a `flutter_screenutil` je uklonjen jer ga niko ne koristi. `google_fonts` ostaje na 6.3. Riverpod stiže tek kad zatreba prvi provider.
 - Sljedece: Backend skelet (task 02), pa Docker i env.
+
+### [2026-10-24] Backend skelet
+- Kontekst: Svaki sljedeći feature treba gotov okvir: slojevi, obrada grešaka i konfiguracija iz okruženja.
+- Danas uradjeno: Rješenje `Torvin.slnx` s projektima Model, Services, API, Worker i Tests. Custom izuzeci i `ErrorResponse`, `ExceptionMiddleware` i `CorrelationIdMiddleware`, Options klase iz env varijabli s validacijom pri startu, `DotEnvLoader` za lokalni razvoj, CORS i Swagger. 28 testova, među njima i `WebApplicationFactory` testovi pravog `Program.cs`. Imena env varijabli su na jednom mjestu (`EnvVars`), a `API_PORT` ima svoje Options.
+- Problemi/blokade: Port 5000 na Macu zauzima AirPlay prijemnik, pa su prvi odgovori dolazili od Applea. Framework poruke za greške vezivanja vrijednosti su na engleskom.
+- Rjesenje/odluke: Nema `/health` rute (anonimna ruta bi bila vidljiva izvana), liveness ide TCP healthcheckom u Dockeru. Jedan oblik greške `{ message, errors? }` za sve statuse, bez 422. API prijavljuje sve neispravne varijable odjednom.
+- Sljedece: Docker compose i `.env.example` (task 03).
+
