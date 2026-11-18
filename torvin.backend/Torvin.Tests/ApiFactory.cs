@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Torvin.Model.Constants;
 using Torvin.Services.Configuration;
 using Torvin.Services.Database;
+using Torvin.Services.Messaging;
 
 namespace Torvin.Tests;
 
@@ -21,6 +22,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     private readonly string _databaseName = $"api-{Guid.NewGuid()}";
     private readonly SemaphoreSlim _seedLock = new(1, 1);
     private bool _seeded;
+
+    // Poruke koje bi API poslao na RabbitMQ (npr. mail s kodom)
+    public FakeMessagePublisher Publisher { get; } = new();
 
     private static readonly Dictionary<string, string> Variables = new()
     {
@@ -54,6 +58,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.ConfigureTestServices(services =>
         {
             services.AddScoped<IDatabaseInitializer, NoOpDatabaseInitializer>();
+            services.RemoveAll<IMessagePublisher>();
+            services.AddSingleton<IMessagePublisher>(Publisher);
 
             services.RemoveAll<DbContextOptions<TorvinDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<TorvinDbContext>>();

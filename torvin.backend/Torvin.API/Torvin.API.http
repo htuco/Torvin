@@ -1,0 +1,64 @@
+# Ručna provjera auth toka (VS Code REST Client ili Rider/Visual Studio).
+# Pokrenuti stack: docker compose up -d --build. Mailovi stižu u Mailpit: http://localhost:8025
+@baseUrl = http://localhost:5080
+@email = novi.korisnik@torvin.local
+@password = Torvin.2026!
+
+### 1. Registracija (201, kod stiže u Mailpit)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Novi",
+  "lastName": "Korisnik",
+  "username": "novi.korisnik",
+  "email": "{{email}}",
+  "phoneNumber": "+387 61 234 567",
+  "password": "{{password}}",
+  "confirmPassword": "{{password}}"
+}
+
+### 2. Prijava prije potvrde (403, šalje novi kod najviše jednom u 60 s)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{ "login": "novi.korisnik", "password": "{{password}}", "app": "Mobile" }
+
+### 3. Potvrda emaila: kod iz posljednjeg maila u Mailpitu (204)
+POST {{baseUrl}}/auth/verify-email
+Content-Type: application/json
+
+{ "email": "{{email}}", "code": "000000" }
+
+### 4. Prijava (200, token za korake 5 i 6)
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{ "login": "novi.korisnik", "password": "{{password}}", "app": "Mobile" }
+
+### 5. Odjava važećim tokenom (204)
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{login.response.body.token}}
+
+### 6. Isti token poslije odjave (401)
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{login.response.body.token}}
+
+### 7. Zaboravljena lozinka (uvijek 204, kod stiže samo za postojeći aktivan račun)
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{ "email": "{{email}}" }
+
+### 8. Reset kodom iz maila (204). Nova lozinka ne smije biti jedna od zadnje tri
+POST {{baseUrl}}/auth/reset-password
+Content-Type: application/json
+
+{ "email": "{{email}}", "code": "000000", "newPassword": "Torvin.2027!", "confirmPassword": "Torvin.2027!" }
+
+### 9. Prijava novom lozinkom (200)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{ "login": "{{email}}", "password": "Torvin.2027!", "app": "Mobile" }
