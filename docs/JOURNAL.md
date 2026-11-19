@@ -126,3 +126,9 @@ Mjesto za biljeske o avanturi razvoja aplikacije.
 - Rjesenje/odluke: Validator koristi Unicode klase slova. Serverska greška se briše pri prvoj izmjeni polja. Odjava odmah vraća na prijavu, a lokalni token briše i kad server ne odgovori. Poruka o isteku se pokaže samo kad je korisnik bio prijavljen. Pravila za ponovno slanje koda su ostala na backendu, a ekran za kod kaže da novi kod stiže pri prijavi. Ugovor s API-jem je provjeren curl-om na compose stacku, a pokretanje aplikacija ide na Windows PC.
 - Sljedece: Tema iz dizajna v2 (task 09) i CI s Windows buildom (08).
 
+### [2026-11-19] CI i Windows build u GitHub Actions
+- Kontekst: Predaja traži Windows build testiran pokretanjem `.exe` i Android APK, a razvoj ide na Macu, gdje se Windows build ne može napraviti. Svaki PR je dosad provjeravan samo lokalno.
+- Danas uradjeno: Workflow `ci` na svakom PR-u prema `development` i `main`: build backenda bez upozorenja, testovi backenda, te analiza i testovi za sva tri Flutter projekta. Ručni workflow `build-release` pravi Windows `Release/` na Windows runneru i `app-release.apk` na Linuxu i nudi ih kao artefakte.
+- Problemi/blokade: Windows build Fluttera nikad nije bio pokrenut, pa se tek u CI-ju vidi grade li se pluginovi (sigurno skladište) za Windows.
+- Rjesenje/odluke: Verzije Fluttera i .NET-a u workflowima su iste kao lokalno. Backend testovima ne trebaju baza ni RabbitMQ, jer koriste bazu u memoriji, pa CI ne podiže servise. Sve provjere su u jednom jobu `ci`, koji je obavezan prije mergea u `development`. ZIP za predaju i release tag ostaju za samu predaju.
+- Sljedece: Tema iz dizajna v2 (task 09).
