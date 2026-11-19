@@ -9,6 +9,7 @@ using Torvin.Services.Database.Entities;
 
 namespace Torvin.Tests;
 
+[Collection(ApiCollection.Name)]
 public class ReferenceDataApiTests(ApiFactory factory) : IClassFixture<ApiFactory>, IAsyncLifetime
 {
     public Task InitializeAsync() => factory.SeedUsersAsync();

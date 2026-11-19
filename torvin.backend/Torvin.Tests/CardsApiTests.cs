@@ -15,6 +15,7 @@ using Torvin.Services.Services;
 
 namespace Torvin.Tests;
 
+[Collection(ApiCollection.Name)]
 public class CardsApiTests(ApiFactory factory) : IClassFixture<ApiFactory>, IAsyncLifetime
 {
     private const string CardNumber = "5555555555554444";

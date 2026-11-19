@@ -15,6 +15,7 @@ using Torvin.Services.Services;
 
 namespace Torvin.Tests;
 
+[Collection(ApiCollection.Name)]
 public class AuthApiTests(ApiFactory factory) : IClassFixture<ApiFactory>, IAsyncLifetime
 {
     public Task InitializeAsync() => factory.SeedUsersAsync();
