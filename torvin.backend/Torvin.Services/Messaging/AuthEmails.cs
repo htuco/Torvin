@@ -5,7 +5,7 @@ using Torvin.Services.Security;
 
 namespace Torvin.Services.Messaging;
 
-// Tekst mailova auth toka. Rok važenja u tekstu dolazi iz istog mjesta kao rok u bazi
+// Tekst mailova s kodom za potvrdu. Rok važenja u tekstu dolazi iz istog mjesta kao rok u bazi
 public static class AuthEmails
 {
     public static EmailRequested Registration(User user, string code) => Create(user,
@@ -17,6 +17,11 @@ public static class AuthEmails
         "Torvin: kod za promjenu lozinke",
         $"Vaš kod za promjenu lozinke je {code}.",
         EmailTokenPurpose.PasswordReset);
+
+    public static EmailRequested CardActivation(User user, Card card, string code) => Create(user,
+        "Torvin: kod za aktivaciju kartice",
+        $"Vaš kod za aktivaciju kartice •••• {card.Last4Digits} je {code}.",
+        EmailTokenPurpose.CardActivation);
 
     private static EmailRequested Create(User user, string subject, string codeLine, EmailTokenPurpose purpose)
     {

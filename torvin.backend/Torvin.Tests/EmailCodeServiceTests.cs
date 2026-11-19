@@ -26,6 +26,68 @@ public class EmailCodeServiceTests
         return code;
     }
 
+    private static async Task<Card> AddPendingCardAsync(TorvinDbContext context, User user, string last4)
+    {
+        var card = new Card
+        {
+            User = user, CardTypeId = 1, CurrencyId = 1, CardStatusId = 1, Network = CardNetwork.Visa,
+            Last4Digits = last4, ExpiresAt = new DateOnly(2030, 12, 31), RowVersion = [1],
+        };
+        context.Cards.Add(card);
+        await context.SaveChangesAsync();
+        return card;
+    }
+
+    private static async Task<string> CreateCardCodeAsync(TorvinDbContext context, Card card)
+    {
+        var code = await new EmailCodeService(context).CreateForCardAsync(card);
+        await context.SaveChangesAsync();
+        return code;
+    }
+
+    // Novi kod kartice poništava samo stari kod iste kartice, a kod druge kartice ostaje važeći
+    [Fact]
+    public async Task CardCode_IsBoundToItsCard()
+    {
+        var (context, user) = await NewUserAsync();
+        await using var _ = context;
+        var first = await AddPendingCardAsync(context, user, "1111");
+        var second = await AddPendingCardAsync(context, user, "2222");
+        var firstOld = await CreateCardCodeAsync(context, first);
+        var firstNew = await CreateCardCodeAsync(context, first);
+        var secondCode = await CreateCardCodeAsync(context, second);
+        var service = new EmailCodeService(context);
+
+        if (firstOld != firstNew)
+        {
+            Assert.Null(await service.FindValidForCardAsync(first.Id, firstOld));
+        }
+
+        if (secondCode != firstNew)
+        {
+            Assert.Null(await service.FindValidForCardAsync(second.Id, firstNew));
+        }
+
+        Assert.NotNull(await service.FindValidForCardAsync(first.Id, firstNew));
+        Assert.NotNull(await service.FindValidForCardAsync(second.Id, secondCode));
+    }
+
+    [Fact]
+    public async Task CardCode_ExpiresAfter15Minutes()
+    {
+        var (context, user) = await NewUserAsync();
+        await using var _ = context;
+        var card = await AddPendingCardAsync(context, user, "1111");
+        await CreateCardCodeAsync(context, card);
+
+        var token = await context.EmailTokens.SingleAsync();
+
+        var lifetime = token.ExpiresAt - token.CreatedAt;
+        Assert.InRange(lifetime, EmailCodeService.CardActivationLifetime - TimeSpan.FromSeconds(5),
+            EmailCodeService.CardActivationLifetime + TimeSpan.FromSeconds(5));
+        Assert.Equal((card.Id, EmailTokenPurpose.CardActivation), (token.CardId!.Value, token.Purpose));
+    }
+
     [Fact]
     public async Task CorrectCode_IsFound_AndStoredOnlyAsHash()
     {
