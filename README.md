@@ -172,6 +172,48 @@ pretragu po nazivu i kodu. Odgovor je `{ items, totalCount, page, pageSize }`, a
 - Prva stranica bez pretrage i filtera (ono što puni dropdown) je keširana 10 minuta, a svaka izmjena preko
   API-ja odmah poništi keš tog šifarnika. Pretraga uvijek ide u bazu.
 
+## Kartice
+
+Korisnik (mobilna) radi samo sa svojim karticama, a tuđa kartica vraća 404, isto kao nepostojeća. Administrator
+(desktop) vidi sve kartice i ručno mijenja status. Cijeli tok je u `torvin.backend/Torvin.API/Torvin.API.http`.
+
+| Ruta | Ko | Šta |
+|---|---|---|
+| `GET /cards` | korisnik | moje kartice, najnovija prva; filteri `cardStatusId`, `cardTypeId`, `fts` (naziv, zadnje 4 cifre) |
+| `GET /cards/{id}` | korisnik | detalji kartice |
+| `POST /cards` | korisnik | nova kartica: tip, valuta, naziv, broj i datum isteka (`MM/GG`), status `Pending` |
+| `POST /cards/{id}/verify` | korisnik | aktivacija kodom iz emaila |
+| `POST /cards/{id}/resend-code` | korisnik | novi kod (najviše jednom u minuti) |
+| `POST /cards/{id}/block`, `/unblock` | korisnik | blokiranje i deblokiranje |
+| `POST /cards/{id}/report` | korisnik | prijava gubitka ili krađe (`Lost`, `Stolen`) uz napomenu |
+| `GET /admin/cards` | admin | sve kartice; filteri statusa, tipa, korisnika (`userId`) i pretraga po vlasniku |
+| `PUT /admin/cards/{id}/status` | admin | ručna promjena statusa uz obavezan razlog |
+
+- **Broj kartice se ne čuva.** Server provjerava 16 cifara, kontrolnu cifru (Luhn) i mrežu iz prvih cifara
+  (Visa počinje s 4, Mastercard s 51–55 ili 2221–2720), a u bazi ostaju samo zadnje 4 cifre, mreža i datum
+  isteka. CVV se ne traži. Platforma ne naplaćuje ništa s kartice; balans postoji samo unutar sistema.
+- Datum isteka `08/29` znači da kartica važi do kraja avgusta 2029. Istekla kartica i datum dalje od 10 godina
+  se odbijaju.
+- Korisnik može imati najviše 5 kartica koje nisu prijavljene ni zatvorene, a ista kartica (mreža, zadnje 4
+  cifre i istek) se ne može dodati dvaput. Valuta se bira pri dodavanju i ne mijenja se.
+- Kod za aktivaciju važi 15 minuta, vezan je za tu karticu i ima najviše 5 pokušaja. Prva aktivirana kartica
+  postaje podrazumijevana za primanje novca.
+- **Prelazi statusa** su na jednom mjestu (`CardStateMachine`):
+
+  | Iz | U | Ko |
+  |---|---|---|
+  | `Pending` | `Active` | korisnik, kodom iz emaila |
+  | `Active` | `Blocked` | korisnik i admin |
+  | `Blocked` | `Active` | korisnik (osim kad je blokirao admin) i admin |
+  | `Active`, `Blocked` | `Lost`, `Stolen` | korisnik i admin |
+  | `Active`, `Blocked`, `Lost`, `Stolen` | `Closed` | samo admin, i samo uz balans 0 |
+
+  Iz `Lost`, `Stolen` i `Closed` nema povratka, a nedozvoljen prelaz vraća 400 s razlogom ("Kartica prijavljena
+  kao ukradena ne može se ponovo aktivirati.").
+- Svaka promjena statusa ostaje u audit tragu (ko, kad, stari i novi status, razlog) i šalje poruku u red
+  `card-status`. Worker te poruke još ne čita: notifikacija vlasniku dolazi s taskom 12, a do tada poruke
+  čekaju u redu (vidi se u RabbitMQ UI-ju).
+
 ## Model baze
 
 Baza se zove `230181` i ima 19 glavnih i 7 referentnih tabela. ERD je u `docs/Torvin - ERD.pdf`, a izvor
@@ -187,7 +229,7 @@ dijagrama je `docs/erd.mmd`.
   se ispravlja korektivnom transakcijom. Meko brisanje (`IsDeleted`) imaju samo obavijesti, ciljevi štednje,
   budžeti i omiljeni primaoci. Referentni zapis koji se koristi baza ne da obrisati.
 - Novac je `decimal(19,4)`, a balans kartice ne može ispod nule ni u samoj bazi. Od broja kartice čuvaju se
-  samo zadnje 4 cifre, a lozinke i kodovi samo kao hash. Sva vremena su UTC.
+  samo zadnje 4 cifre i mreža (Visa ili Mastercard), a lozinke i kodovi samo kao hash. Sva vremena su UTC.
 
 ## Tehnologije
 
