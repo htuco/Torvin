@@ -173,7 +173,8 @@ public sealed class DataSeeder(TorvinDbContext context, ILogger<DataSeeder> logg
             Currency = _currencies[currencyCode],
             Name = name,
             Last4Digits = _random.Next(0, 10_000).ToString("D4", CultureInfo.InvariantCulture),
-            ExpiresAt = DateOnly.FromDateTime(_now).AddYears(_random.Next(1, 5)),
+            Network = _random.Next(2) == 0 ? CardNetwork.Visa : CardNetwork.Mastercard,
+            ExpiresAt = EndOfMonth(DateOnly.FromDateTime(_now).AddYears(_random.Next(1, 5))),
             IsDefault = isDefault,
             CreatedAt = user.CreatedAt.AddDays(1),
         };
@@ -182,6 +183,10 @@ public sealed class DataSeeder(TorvinDbContext context, ILogger<DataSeeder> logg
         _initialBalances[card] = initialBalance;
         return card;
     }
+
+    // Kartica važi do kraja mjeseca iz datuma isteka (MM/GG), kao i kartica koju doda korisnik
+    private static DateOnly EndOfMonth(DateOnly date) =>
+        new(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
 
     // ---------- Transakcije
 

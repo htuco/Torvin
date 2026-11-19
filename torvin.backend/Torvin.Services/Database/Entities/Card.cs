@@ -1,3 +1,5 @@
+using Torvin.Model.Enums;
+
 namespace Torvin.Services.Database.Entities;
 
 public class Card : BaseEntity
@@ -18,6 +20,7 @@ public class Card : BaseEntity
 
     // Puni broj se nikad ne čuva
     public string Last4Digits { get; set; } = "";
+    public CardNetwork Network { get; set; }
     public DateOnly ExpiresAt { get; set; }
     public decimal Balance { get; set; }
 

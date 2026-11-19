@@ -63,6 +63,7 @@ public sealed class RabbitMqPublisher(IOptions<RabbitMqOptions> options, ILogger
             // Redovi postoje prije prve objave, i kad Worker još nije startao
             await using var channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
             await RabbitMqTopology.DeclareEmailQueuesAsync(channel, cancellationToken);
+            await RabbitMqTopology.DeclareCardStatusQueuesAsync(channel, cancellationToken);
             return _connection;
         }
         finally

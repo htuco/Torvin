@@ -4,6 +4,7 @@ using Torvin.API.Middleware;
 
 namespace Torvin.Tests;
 
+[Collection(ApiCollection.Name)]
 public class ApiPipelineTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static HttpRequestMessage Preflight(string origin) =>

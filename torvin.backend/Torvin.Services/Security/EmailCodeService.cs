@@ -14,9 +14,15 @@ public interface IEmailCodeService
 
     Task<bool> CanSendAsync(int userId, EmailTokenPurpose purpose, CancellationToken cancellationToken = default);
 
+    // Kod za aktivaciju kartice je vezan za tu karticu, pa novi kod poništava samo stari kod iste kartice
+    Task<string> CreateForCardAsync(Card card, CancellationToken cancellationToken = default);
+
     // Vraća važeći kod kad je unesen tačno, a null za svaki neuspjeh. Kod se ovdje ne troši
     Task<EmailToken?> FindValidAsync(string email, string code, EmailTokenPurpose purpose,
         CancellationToken cancellationToken = default);
+
+    // Isto kao FindValidAsync, ali kod mora pripadati baš ovoj kartici
+    Task<EmailToken?> FindValidForCardAsync(int cardId, string code, CancellationToken cancellationToken = default);
 
     // Troši kod i u istom SaveChanges snima izmjene koje je pozivalac već napravio (npr. nova lozinka).
     // Vraća false kad je drugi zahtjev u međuvremenu iskoristio isti kod
@@ -33,6 +39,7 @@ public sealed class EmailCodeService(TorvinDbContext context) : IEmailCodeServic
     public static readonly TimeSpan ResendInterval = TimeSpan.FromSeconds(60);
     public static readonly TimeSpan RegistrationLifetime = TimeSpan.FromMinutes(15);
     public static readonly TimeSpan PasswordResetLifetime = TimeSpan.FromMinutes(30);
+    public static readonly TimeSpan CardActivationLifetime = TimeSpan.FromMinutes(15);
 
     // Svaki konflikt znači da je drugi zahtjev uspio upisati, pa petlja uvijek napreduje
     private const int MaxConcurrencyRetries = 20;
@@ -41,34 +48,30 @@ public sealed class EmailCodeService(TorvinDbContext context) : IEmailCodeServic
     {
         EmailTokenPurpose.Registration => RegistrationLifetime,
         EmailTokenPurpose.PasswordReset => PasswordResetLifetime,
+        EmailTokenPurpose.CardActivation => CardActivationLifetime,
         _ => throw new ArgumentOutOfRangeException(nameof(purpose), purpose, "Svrha koda nema zadan rok važenja."),
     };
 
     public async Task<string> CreateAsync(User user, EmailTokenPurpose purpose, CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
-
         // Novi kod poništava stare iste svrhe, pa važi samo onaj iz posljednjeg maila
         if (user.Id != 0)
         {
-            var previous = await context.EmailTokens
-                .Where(t => t.UserId == user.Id && t.Purpose == purpose && t.UsedAt == null && t.ExpiresAt > now)
-                .ToListAsync(cancellationToken);
-            foreach (var token in previous)
-            {
-                token.ExpiresAt = now;
-            }
+            await ExpireAsync(context.EmailTokens.Where(t => t.UserId == user.Id && t.Purpose == purpose), cancellationToken);
         }
 
-        var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6", CultureInfo.InvariantCulture);
-        context.EmailTokens.Add(new EmailToken
+        return Add(new EmailToken { User = user, Purpose = purpose });
+    }
+
+    public async Task<string> CreateForCardAsync(Card card, CancellationToken cancellationToken = default)
+    {
+        if (card.Id != 0)
         {
-            User = user,
-            Purpose = purpose,
-            CodeHash = PasswordHasher.Hash(code),
-            ExpiresAt = now + LifetimeOf(purpose),
-        });
-        return code;
+            await ExpireAsync(context.EmailTokens.Where(t => t.CardId == card.Id && t.Purpose == EmailTokenPurpose.CardActivation),
+                cancellationToken);
+        }
+
+        return Add(new EmailToken { UserId = card.UserId, Card = card, Purpose = EmailTokenPurpose.CardActivation });
     }
 
     public async Task<bool> CanSendAsync(int userId, EmailTokenPurpose purpose, CancellationToken cancellationToken = default)
@@ -90,14 +93,19 @@ public sealed class EmailCodeService(TorvinDbContext context) : IEmailCodeServic
             .ThenByDescending(t => t.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (token is null || !await CountAttemptAsync(token, cancellationToken))
-        {
-            // Provjera traje isto i bez važećeg koda, da trajanje ne otkrije ima li email aktivan kod
-            PasswordHasher.Verify(code, DummyCodeHash.Value);
-            return null;
-        }
+        return await VerifyAsync(token, code, cancellationToken);
+    }
 
-        return PasswordHasher.Verify(code.Trim(), token.CodeHash) ? token : null;
+    public async Task<EmailToken?> FindValidForCardAsync(int cardId, string code, CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        var token = await context.EmailTokens
+            .Where(t => t.CardId == cardId && t.Purpose == EmailTokenPurpose.CardActivation && t.UsedAt == null && t.ExpiresAt > now)
+            .OrderByDescending(t => t.CreatedAt)
+            .ThenByDescending(t => t.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return await VerifyAsync(token, code, cancellationToken);
     }
 
     public async Task<bool> UseAsync(EmailToken token, CancellationToken cancellationToken = default)
@@ -122,6 +130,37 @@ public sealed class EmailCodeService(TorvinDbContext context) : IEmailCodeServic
                 }
             }
         }
+    }
+
+    private async Task ExpireAsync(IQueryable<EmailToken> tokens, CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var previous = await tokens.Where(t => t.UsedAt == null && t.ExpiresAt > now).ToListAsync(cancellationToken);
+        foreach (var token in previous)
+        {
+            token.ExpiresAt = now;
+        }
+    }
+
+    private string Add(EmailToken token)
+    {
+        var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6", CultureInfo.InvariantCulture);
+        token.CodeHash = PasswordHasher.Hash(code);
+        token.ExpiresAt = DateTime.UtcNow + LifetimeOf(token.Purpose);
+        context.EmailTokens.Add(token);
+        return code;
+    }
+
+    private async Task<EmailToken?> VerifyAsync(EmailToken? token, string code, CancellationToken cancellationToken)
+    {
+        if (token is null || !await CountAttemptAsync(token, cancellationToken))
+        {
+            // Provjera traje isto i bez važećeg koda, da trajanje ne otkrije postoji li aktivan kod
+            PasswordHasher.Verify(code, DummyCodeHash.Value);
+            return null;
+        }
+
+        return PasswordHasher.Verify(code.Trim(), token.CodeHash) ? token : null;
     }
 
     // Pokušaj se snima prije poređenja (i kad operacija poslije padne), da paralelni zahtjevi ne dobiju više
