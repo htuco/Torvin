@@ -1,0 +1,208 @@
+%% Izvor za docs/Torvin - ERD.pdf. Svaka tabela ima i CreatedAt i ModifiedAt, a IsDeleted i DeletedAt
+%% imaju samo News, SavingsGoals, Budgets i FavoriteRecipients.
+erDiagram
+    Roles ||--o{ Users : "RoleId"
+    Users ||--o{ UserPasswords : "historija"
+    Users ||--o{ EmailTokens : "OTP i reset"
+    Cards |o--o{ EmailTokens : "aktivacija kartice"
+    Users ||--o{ Cards : "vlasnik"
+    CardTypes ||--o{ Cards : ""
+    CardStatuses ||--o{ Cards : ""
+    Currencies ||--o{ Cards : ""
+    Users ||--o{ Transactions : "Sender / Receiver"
+    Cards |o--o{ Transactions : "SenderCard / ReceiverCard"
+    Currencies ||--o{ Transactions : ""
+    TransactionTypes ||--o{ Transactions : ""
+    TransactionStatuses ||--o{ Transactions : ""
+    TransactionCategories |o--o{ Transactions : "kategorija (opc.)"
+    Transactions |o--o{ Transactions : "OriginalTransactionId (korektivna)"
+    Transactions ||--o| TransactionAnomalies : "1:1"
+    Transactions ||--o{ ReversalRequests : ""
+    Users ||--o{ ReversalRequests : "RequestedBy / DecidedBy"
+    Users ||--o{ MoneyRequests : "Requester / Payer"
+    Transactions |o--o| MoneyRequests : "plaćanje"
+    Users ||--o{ StandingOrders : "nalogodavac / primalac"
+    Cards ||--o{ StandingOrders : "SourceCard"
+    StandingOrders ||--o{ StandingOrderExecutions : "pokušaji"
+    Transactions |o--o| StandingOrderExecutions : ""
+    Users ||--o{ SavingsGoals : ""
+    SavingsGoals ||--o{ SavingsMovements : ""
+    Cards ||--o{ SavingsMovements : ""
+    Users ||--o{ Budgets : ""
+    TransactionCategories ||--o{ Budgets : ""
+    Users ||--o{ Notifications : ""
+    Users ||--o{ News : "autor"
+    Users ||--o{ AuditLogs : "akter (opc.)"
+    Users ||--o{ FavoriteRecipients : "vlasnik / primalac"
+    Users ||--o{ ChatMessages : ""
+    Users ||--o{ RevokedTokens : ""
+
+    Users { int Id PK
+        string FirstName "50"
+        string LastName "50"
+        string Username UK "50"
+        string Email UK "256"
+        string PhoneNumber "30, null"
+        int RoleId FK
+        bool IsActive
+        bool EmailConfirmed
+        int FailedLoginCount
+        datetime LockoutEndAt "null"
+        bytes ProfileImage "null"
+        string ProfileImageContentType "null" }
+    UserPasswords { int Id PK
+        int UserId FK
+        string PasswordHash "256" }
+    EmailTokens { int Id PK
+        int UserId FK
+        int CardId FK "null"
+        int Purpose "enum"
+        string CodeHash "256"
+        datetime ExpiresAt
+        datetime UsedAt "null"
+        int AttemptCount }
+    Cards { int Id PK
+        int UserId FK
+        int CardTypeId FK
+        int CardStatusId FK
+        int CurrencyId FK
+        string Name "50, null"
+        string Last4Digits "char(4)"
+        date ExpiresAt
+        decimal Balance "19,4 >= 0"
+        bool IsDefault "UK po korisniku"
+        rowversion RowVersion }
+    Transactions { int Id PK
+        string ReferenceNumber UK "20"
+        int SenderUserId FK
+        int ReceiverUserId FK
+        int SenderCardId FK "null"
+        int ReceiverCardId FK "null"
+        decimal Amount "19,4 > 0"
+        int CurrencyId FK
+        int TransactionTypeId FK
+        int TransactionStatusId FK
+        int TransactionCategoryId FK "null"
+        int OriginalTransactionId FK "null"
+        string Note "200, null" }
+    TransactionAnomalies { int Id PK
+        int TransactionId FK "UK"
+        decimal Score
+        decimal AmountScore
+        decimal FrequencyScore
+        decimal TimeScore
+        decimal RecipientScore
+        bool IsAnomaly }
+    ReversalRequests { int Id PK
+        int TransactionId FK
+        int RequestedByUserId FK
+        string Reason "500"
+        int Status "enum"
+        int DecidedByUserId FK "null"
+        string DecisionReason "500, null"
+        datetime DecidedAt "null"
+        int CorrectiveTransactionId FK "null" }
+    MoneyRequests { int Id PK
+        int RequesterUserId FK
+        int PayerUserId FK
+        decimal Amount
+        int CurrencyId FK
+        string Note "200, null"
+        int Status "enum"
+        datetime RespondedAt "null"
+        int TransactionId FK "null" }
+    StandingOrders { int Id PK
+        int UserId FK
+        int SourceCardId FK
+        int RecipientUserId FK
+        decimal Amount
+        string Note "200, null"
+        int Frequency "enum"
+        date StartDate
+        date EndDate "null"
+        datetime NextExecutionAt "null"
+        int Status "enum" }
+    StandingOrderExecutions { int Id PK
+        int StandingOrderId FK
+        datetime ScheduledFor
+        int AttemptNumber
+        int Status "enum"
+        string FailureReason "300, null"
+        int TransactionId FK "null" }
+    SavingsGoals { int Id PK
+        int UserId FK
+        string Name "100"
+        decimal TargetAmount "> 0"
+        decimal CurrentAmount ">= 0"
+        int CurrencyId FK
+        date Deadline "null"
+        datetime AchievedAt "null" }
+    SavingsMovements { int Id PK
+        int SavingsGoalId FK
+        int CardId FK
+        int Type "enum"
+        decimal Amount "> 0" }
+    Budgets { int Id PK
+        int UserId FK
+        int TransactionCategoryId FK
+        int CurrencyId FK
+        int Year
+        int Month "1-12"
+        decimal LimitAmount "> 0" }
+    Notifications { int Id PK
+        int UserId FK
+        int Type "enum"
+        string Title "150"
+        string Message "1000"
+        bool IsRead
+        datetime ReadAt "null"
+        int RelatedEntityId "null" }
+    News { int Id PK
+        int AuthorUserId FK
+        string Title "150"
+        string Content "4000"
+        bytes Image
+        string ImageContentType "50"
+        datetime PublishedAt }
+    AuditLogs { int Id PK
+        int ActorUserId FK "null"
+        string Action "50"
+        string EntityType "50"
+        int EntityId
+        string OldValues "max, null"
+        string NewValues "max, null"
+        string Description "500, null" }
+    FavoriteRecipients { int Id PK
+        int UserId FK
+        int RecipientUserId FK
+        string Nickname "50, null" }
+    ChatMessages { int Id PK
+        int UserId FK
+        int Role "enum"
+        string Content "4000" }
+    RevokedTokens { int Id PK
+        int UserId FK
+        string Jti UK "64"
+        datetime ExpiresAt }
+    Roles { int Id PK
+        string Name UK "20" }
+    CardTypes { int Id PK
+        string Name UK "50"
+        string Description "200, null" }
+    CardStatuses { int Id PK
+        string Code UK "30"
+        string Name "50"
+        string Description "200, null" }
+    Currencies { int Id PK
+        string Code UK "3"
+        string Name "50"
+        string Symbol "5" }
+    TransactionTypes { int Id PK
+        string Code UK "30"
+        string Name "50" }
+    TransactionStatuses { int Id PK
+        string Code UK "30"
+        string Name "50" }
+    TransactionCategories { int Id PK
+        string Name UK "50"
+        string Description "200, null" }

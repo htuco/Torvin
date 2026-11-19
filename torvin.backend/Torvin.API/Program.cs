@@ -1,0 +1,84 @@
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Extensions.Options;
+using Torvin.API.Infrastructure;
+using Torvin.API.Messaging;
+using Torvin.API.Middleware;
+using Torvin.Services;
+using Torvin.Services.Configuration;
+using Torvin.Services.Database;
+using Torvin.Services.Messaging;
+
+DotEnvLoader.LoadIfDevelopment();
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Lokalno port dolazi iz .env (API_PORT). U Dockeru port zadaje okruženje kontejnera, a API_PORT je tamo host port iz compose-a
+if (int.TryParse(builder.Configuration[EnvVars.ApiPort], out var apiPort)
+    && builder.Configuration[EnvVars.AspNetCoreUrls] is null
+    && builder.Configuration[EnvVars.AspNetCoreHttpPorts] is null)
+{
+    builder.WebHost.UseUrls($"http://localhost:{apiPort}");
+}
+
+builder.Services.AddApiOptions();
+builder.Services.AddDatabaseOptions();
+builder.Services.AddTorvinDatabase();
+builder.Services.AddJwtOptions();
+builder.Services.AddRabbitMqOptions();
+builder.Services.AddCorsOptions();
+builder.Services.AddTorvinServices();
+builder.Services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
+builder.Services.AddTorvinJwtAuthentication();
+
+builder.Services.AddControllers(options =>
+    {
+        BosnianModelBindingMessages.Apply(options.ModelBindingMessageProvider);
+        // Obavezna polja su označena s [Required] i porukom na bosanskom. Bez ovoga bi ASP.NET sam dodao
+        // englesku poruku "The ... field is required." za svaki parametar koji nije nullable
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+        options.InvalidModelStateResponseFactory = InvalidModelStateResponse.Create)
+    .AddJsonOptions(options =>
+    {
+        // Enumi idu kao tekst ("Desktop"), a poruke parsera JSON-a (na engleskom) se ne prosljeđuju klijentu
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.AllowInputFormatterExceptionMessages = false;
+    });
+builder.Services.AddSingleton<IClientErrorFactory, ErrorResponseClientErrorFactory>();
+builder.Services.AddCors();
+builder.Services.AddTorvinSwagger();
+
+var app = builder.Build();
+
+// Prijavljuje sve neispravne varijable odjednom, a ne samo prvu na koju aplikacija naiđe
+app.Services.GetRequiredService<IStartupValidator>().Validate();
+
+// Migracije prije prvog zahtjeva: API ne prima zahtjeve dok baza nema aktuelnu šemu
+using (var scope = app.Services.CreateScope())
+{
+    await scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<ExceptionMiddleware>();
+
+var corsOrigins = app.Services.GetRequiredService<IOptions<CorsOptions>>().Value.Origins;
+app.UseCors(policy => policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod());
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+
+// Javna klasa da je WebApplicationFactory u testovima može naći
+public partial class Program;
