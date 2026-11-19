@@ -19,7 +19,7 @@ class TorvinApp extends ConsumerWidget {
       title: 'Torvin',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ref.watch(themeModeControllerProvider).value ?? ThemeMode.system,
       routerConfig: ref.watch(routerProvider),
     );
   }

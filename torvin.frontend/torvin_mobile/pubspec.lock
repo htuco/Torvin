@@ -197,14 +197,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "18.1.1"
-  google_fonts:
-    dependency: transitive
-    description:
-      name: google_fonts
-      sha256: ba03d03bcaa2f6cb7bd920e3b5027181db75ab524f8891c8bc3aa603885b8055
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.3.3"
   hooks:
     dependency: transitive
     description:
@@ -309,6 +301,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  lucide_icons_flutter:
+    dependency: transitive
+    description:
+      name: lucide_icons_flutter
+      sha256: d2ad72b8059ee0ad578d0aeb72bf4e7841c0126f360a8aa37f06e305e1fc7e4b
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.3"
   matcher:
     dependency: transitive
     description:
@@ -529,6 +529,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  u_credit_card:
+    dependency: transitive
+    description:
+      name: u_credit_card
+      sha256: eea4edb78e143247ad682c81094bd1b510e1c794964889fd99c8d987883cfd64
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.6.0"
   uuid:
     dependency: transitive
     description:

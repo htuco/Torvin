@@ -58,9 +58,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with ApiFormSta
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
+            TorvinTextField(
               controller: _firstName,
-              decoration: const InputDecoration(labelText: 'Ime'),
+              label: 'Ime',
               textCapitalization: TextCapitalization.words,
               textInputAction: TextInputAction.next,
               onChanged: clearServerError,
@@ -71,9 +71,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with ApiFormSta
               ]),
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            TorvinTextField(
               controller: _lastName,
-              decoration: const InputDecoration(labelText: 'Prezime'),
+              label: 'Prezime',
               textCapitalization: TextCapitalization.words,
               textInputAction: TextInputAction.next,
               onChanged: clearServerError,
@@ -84,12 +84,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with ApiFormSta
               ]),
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            TorvinTextField(
               controller: _username,
-              decoration: const InputDecoration(
-                labelText: 'Korisničko ime',
-                helperText: '3–50 znakova: slova, cifre, tačka i donja crta',
-              ),
+              label: 'Korisničko ime',
+              helper: '3–50 znakova: slova, cifre, tačka i donja crta',
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.newUsername],
               onChanged: clearServerError,
@@ -100,9 +98,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with ApiFormSta
               ]),
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            TorvinTextField(
               controller: _email,
-              decoration: const InputDecoration(labelText: 'Email', hintText: 'ime@domena.ba'),
+              label: 'Email',
+              hint: 'ime@domena.ba',
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.email],
@@ -115,9 +114,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with ApiFormSta
               ]),
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            TorvinTextField(
               controller: _phone,
-              decoration: const InputDecoration(labelText: 'Telefon (nije obavezan)', hintText: '+387 61 234 567'),
+              label: 'Telefon (nije obavezan)',
+              hint: '+387 61 234 567',
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.telephoneNumber],
@@ -126,12 +126,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with ApiFormSta
               validator: Validators.phone,
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            TorvinTextField(
               controller: _password,
-              decoration: const InputDecoration(
-                labelText: 'Lozinka',
-                helperText: '8–100 znakova, veliko i malo slovo, broj i specijalni znak',
-              ),
+              label: 'Lozinka',
+              helper: '8–100 znakova, veliko i malo slovo, broj i specijalni znak',
               obscureText: true,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.newPassword],
@@ -143,9 +141,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with ApiFormSta
               ]),
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            TorvinTextField(
               controller: _confirmPassword,
-              decoration: const InputDecoration(labelText: 'Potvrda lozinke'),
+              label: 'Potvrda lozinke',
               obscureText: true,
               textInputAction: TextInputAction.done,
               onChanged: clearServerError,

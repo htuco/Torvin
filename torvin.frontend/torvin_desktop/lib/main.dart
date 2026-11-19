@@ -17,9 +17,9 @@ class TorvinAdminApp extends ConsumerWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Torvin Admin',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      theme: AppTheme.desktopLightTheme,
+      darkTheme: AppTheme.desktopDarkTheme,
+      themeMode: ref.watch(themeModeControllerProvider).value ?? ThemeMode.system,
       routerConfig: ref.watch(routerProvider),
     );
   }

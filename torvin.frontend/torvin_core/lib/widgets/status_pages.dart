@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_constants.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import 'empty_state.dart';
 
 /// Prikazuje se dok se sesija čita iz skladišta, prije nego što router zna kuda ide.
 class SplashPage extends StatelessWidget {
@@ -19,15 +21,12 @@ class NotFoundPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Stranica ne postoji.', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: AppConstants.spacingMD),
-            FilledButton(onPressed: onBack, child: const Text('Na početnu')),
-          ],
-        ),
+      body: EmptyState(
+        icon: LucideIcons.searchX,
+        title: 'Stranica ne postoji.',
+        message: 'Adresa je pogrešna ili stranica više nije dostupna.',
+        actionLabel: 'Na početnu',
+        onAction: onBack,
       ),
     );
   }
