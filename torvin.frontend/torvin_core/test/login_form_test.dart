@@ -18,7 +18,7 @@ void main() {
     ));
   }
 
-  Finder field(String label) => find.widgetWithText(TextFormField, label);
+  Finder field(String label) => find.widgetWithText(TorvinTextField, label);
 
   testWidgets('prije unosa nema poruka, a prazna prijava ih prikazuje ispod oba polja', (tester) async {
     await pumpForm(tester, http.Response('', 204));

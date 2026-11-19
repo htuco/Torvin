@@ -12,17 +12,15 @@ class SubmitButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: AppConstants.buttonHeight,
-      child: FilledButton(
-        onPressed: busy ? null : onPressed,
-        child: busy
-            ? const SizedBox.square(
-                dimension: AppConstants.spacingLG,
-                child: CircularProgressIndicator(strokeWidth: AppConstants.borderWidthMedium),
-              )
-            : Text(label),
-      ),
+    // Visinu daje tema: 48 na mobilnoj, 40 na desktopu
+    return FilledButton(
+      onPressed: busy ? null : onPressed,
+      child: busy
+          ? const SizedBox.square(
+              dimension: AppConstants.iconSize,
+              child: CircularProgressIndicator(strokeWidth: AppConstants.borderWidthMedium),
+            )
+          : Text(label),
     );
   }
 }

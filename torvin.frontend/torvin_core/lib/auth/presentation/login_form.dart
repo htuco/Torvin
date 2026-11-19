@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../forms/api_form_state.dart';
 import '../../theme/app_constants.dart';
 import '../../validation/validators.dart';
 import '../../widgets/form_error_text.dart';
 import '../../widgets/submit_button.dart';
+import '../../widgets/torvin_text_field.dart';
 import '../auth_providers.dart';
 import '../client_app.dart';
 
@@ -58,9 +60,9 @@ class _LoginFormState extends ConsumerState<LoginForm> with ApiFormState<LoginFo
             Text(notice, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary)),
             const SizedBox(height: AppConstants.spacingMD),
           ],
-          TextFormField(
+          TorvinTextField(
             controller: _login,
-            decoration: const InputDecoration(labelText: 'Korisničko ime ili email'),
+            label: 'Korisničko ime ili email',
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.username],
@@ -72,15 +74,13 @@ class _LoginFormState extends ConsumerState<LoginForm> with ApiFormState<LoginFo
             ]),
           ),
           const SizedBox(height: AppConstants.spacingMD),
-          TextFormField(
+          TorvinTextField(
             controller: _password,
-            decoration: InputDecoration(
-              labelText: 'Lozinka',
-              suffixIcon: IconButton(
-                tooltip: _obscurePassword ? 'Prikaži lozinku' : 'Sakrij lozinku',
-                icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-              ),
+            label: 'Lozinka',
+            suffix: IconButton(
+              tooltip: _obscurePassword ? 'Prikaži lozinku' : 'Sakrij lozinku',
+              icon: Icon(_obscurePassword ? LucideIcons.eye : LucideIcons.eyeOff),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             ),
             obscureText: _obscurePassword,
             textInputAction: TextInputAction.done,
