@@ -88,6 +88,14 @@ Za predaju se pravi Windows build, a na Macu se razvija na macOS-u. Desktop prij
 administratore. Token se čuva u sigurnom skladištu sistema (Windows Credential Manager, macOS Keychain), a kad istekne ili
 bude opozvan, aplikacija se vrati na prijavu.
 
+### Windows i Android build
+
+Release build se pravi u GitHub Actions, jer Windows build traži Windows mašinu. Workflow `build-release` se pokreće
+ručno (Actions → build-release → Run workflow) i daje dva artefakta: `windows-release` (folder `Release/` s
+`torvin_desktop.exe`, API na `http://localhost:5080`) i `android-apk` (`app-release.apk`, API na `http://10.0.2.2:5080`).
+Svaki pull request prolazi workflow `ci`: build backenda bez upozorenja, testovi backenda, te `flutter analyze` i
+`flutter test` za sva tri Flutter projekta.
+
 ## Pristupni podaci
 
 Testni korisnici nastaju seedom baze pri prvom startu API-ja:
