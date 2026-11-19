@@ -41,21 +41,8 @@ public abstract class BaseReadService<TModel, TSearch, TEntity>(TorvinDbContext 
     // Servis koji ima dodatni filter u AddFilter ga dodaje i ovdje, da filtrirana lista ne ide u keš
     protected virtual bool HasFilters(TSearch search) => !string.IsNullOrWhiteSpace(search.Fts);
 
-    // Servis ograniči stranicu i sam, jer ga mogu zvati i drugi servisi, a ne samo controller s validacijom
-    private async Task<PagedResult<TModel>> LoadPageAsync(TSearch search, CancellationToken cancellationToken)
-    {
-        var page = Math.Clamp(search.Page, 1, BaseSearchObject.MaxPage);
-        var pageSize = Math.Clamp(search.PageSize, 1, BaseSearchObject.MaxPageSize);
-        var query = AddFilter(Context.Set<TEntity>().AsNoTracking(), search);
-
-        var totalCount = await query.CountAsync(cancellationToken);
-        var items = await query
+    private Task<PagedResult<TModel>> LoadPageAsync(TSearch search, CancellationToken cancellationToken) =>
+        AddFilter(Context.Set<TEntity>().AsNoTracking(), search)
             .OrderBy(entity => entity.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ProjectToType<TModel>()
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<TModel>(items, totalCount, page, pageSize);
-    }
+            .ToPagedResultAsync<TEntity, TModel>(search, cancellationToken);
 }
