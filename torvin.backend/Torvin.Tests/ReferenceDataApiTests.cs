@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Torvin.Model.Enums;
 using Torvin.Model.Responses;
 using Torvin.Services.Database;
 using Torvin.Services.Database.Entities;
@@ -88,7 +89,7 @@ public class ReferenceDataApiTests(ApiFactory factory) : IClassFixture<ApiFactor
             context.Cards.Add(new Card
             {
                 UserId = 1, CardTypeId = 1, CardStatusId = 2, CurrencyId = currency.Id,
-                Last4Digits = "4821", ExpiresAt = new DateOnly(2029, 12, 31), RowVersion = [1],
+                Last4Digits = "4821", Network = CardNetwork.Visa, ExpiresAt = new DateOnly(2029, 12, 31), RowVersion = [1],
             });
             await context.SaveChangesAsync();
         }

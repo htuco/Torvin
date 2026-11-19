@@ -169,6 +169,9 @@ namespace Torvin.Services.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("Network")
+                        .HasColumnType("int");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -193,6 +196,8 @@ namespace Torvin.Services.Migrations
                     b.ToTable("Cards", t =>
                         {
                             t.HasCheckConstraint("CK_Cards_Balance", "[Balance] >= 0");
+
+                            t.HasCheckConstraint("CK_Cards_Network", "[Network] BETWEEN 1 AND 2");
                         });
                 });
 

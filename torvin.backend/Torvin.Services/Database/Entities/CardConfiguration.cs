@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Torvin.Model.Enums;
 
 namespace Torvin.Services.Database.Entities;
 
@@ -7,7 +8,11 @@ public class CardConfiguration : IEntityTypeConfiguration<Card>
 {
     public void Configure(EntityTypeBuilder<Card> builder)
     {
-        builder.ToTable(t => t.HasCheckConstraint("CK_Cards_Balance", "[Balance] >= 0"));
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_Cards_Balance", "[Balance] >= 0");
+            t.HasCheckConstraint("CK_Cards_Network", EnumCheckConstraint.Sql<CardNetwork>(nameof(Card.Network)));
+        });
 
         builder.Property(c => c.Name).HasMaxLength(50);
         builder.Property(c => c.Last4Digits).IsRequired().HasMaxLength(4).IsFixedLength();
