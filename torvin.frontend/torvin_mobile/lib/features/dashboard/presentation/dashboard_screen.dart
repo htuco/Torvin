@@ -12,9 +12,10 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Torvin'),
         actions: [
+          const ThemeModeButton(),
           IconButton(
             tooltip: 'Odjava',
-            icon: const Icon(Icons.logout),
+            icon: const Icon(LucideIcons.logOut),
             onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
           ),
         ],

@@ -49,9 +49,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
+            TorvinTextField(
               controller: _email,
-              decoration: const InputDecoration(labelText: 'Email', hintText: 'ime@domena.ba'),
+              label: 'Email',
+              hint: 'ime@domena.ba',
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.email],

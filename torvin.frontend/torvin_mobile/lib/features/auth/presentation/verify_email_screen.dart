@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:torvin_core/torvin_core.dart';
@@ -47,9 +46,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> with ApiF
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
+            TorvinTextField(
               controller: _email,
-              decoration: const InputDecoration(labelText: 'Email', hintText: 'ime@domena.ba'),
+              label: 'Email',
+              hint: 'ime@domena.ba',
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
               onChanged: clearServerError,
@@ -61,12 +61,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> with ApiF
               ]),
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            OtpField(
               controller: _code,
-              decoration: const InputDecoration(labelText: 'Kod iz emaila'),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
-              autofillHints: const [AutofillHints.oneTimeCode],
+              label: 'Kod iz emaila',
               textInputAction: TextInputAction.done,
               onChanged: clearServerError,
               onFieldSubmitted: (_) => _submit(),

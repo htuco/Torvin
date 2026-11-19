@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -58,7 +57,7 @@ void main() {
     await tester.tap(find.text('Nemate račun? Registrujte se'));
     await tester.pumpAndSettle();
 
-    Finder field(String label) => find.widgetWithText(TextFormField, label);
+    Finder field(String label) => find.widgetWithText(TorvinTextField, label);
     await tester.enterText(field('Ime'), 'Amra');
     await tester.enterText(field('Prezime'), 'Hodžić');
     await tester.enterText(field('Korisničko ime'), 'amra.h');
@@ -74,6 +73,6 @@ void main() {
     expect(body['phoneNumber'], isNull);
     expect(find.text('Potvrda emaila'), findsOneWidget);
     expect(find.text('Registracija je uspjela. Poslali smo kod za potvrdu na vaš email.'), findsOneWidget);
-    expect(find.widgetWithText(TextFormField, 'amra@domena.ba'), findsOneWidget);
+    expect(find.widgetWithText(TorvinTextField, 'amra@domena.ba'), findsOneWidget);
   });
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:torvin_core/torvin_core.dart';
@@ -55,9 +54,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
+            TorvinTextField(
               controller: _email,
-              decoration: const InputDecoration(labelText: 'Email', hintText: 'ime@domena.ba'),
+              label: 'Email',
+              hint: 'ime@domena.ba',
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
               onChanged: clearServerError,
@@ -69,24 +69,19 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
               ]),
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            OtpField(
               controller: _code,
-              decoration: const InputDecoration(labelText: 'Kod iz emaila'),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
-              autofillHints: const [AutofillHints.oneTimeCode],
+              label: 'Kod iz emaila',
               textInputAction: TextInputAction.next,
               onChanged: clearServerError,
               forceErrorText: serverError('code'),
               validator: Validators.combine([Validators.required('Kod je obavezan.'), Validators.code]),
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            TorvinTextField(
               controller: _newPassword,
-              decoration: const InputDecoration(
-                labelText: 'Nova lozinka',
-                helperText: '8–100 znakova, veliko i malo slovo, broj i specijalni znak',
-              ),
+              label: 'Nova lozinka',
+              helper: '8–100 znakova, veliko i malo slovo, broj i specijalni znak',
               obscureText: true,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.newPassword],
@@ -98,9 +93,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
               ]),
             ),
             const SizedBox(height: AppConstants.spacingMD),
-            TextFormField(
+            TorvinTextField(
               controller: _confirmPassword,
-              decoration: const InputDecoration(labelText: 'Potvrda lozinke'),
+              label: 'Potvrda lozinke',
               obscureText: true,
               textInputAction: TextInputAction.done,
               onChanged: clearServerError,
