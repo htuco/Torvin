@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:torvin_core/torvin_core.dart';
 
@@ -17,6 +18,25 @@ class FakeSessionStorage implements SessionStorage {
 
   @override
   Future<void> clear() async => session = null;
+}
+
+/// Izbor teme u memoriji. `failRead` glumi skladište koje nije dostupno.
+class FakeThemeModeStorage implements ThemeModeStorage {
+  FakeThemeModeStorage([this.mode]);
+
+  ThemeMode? mode;
+  bool failRead = false;
+
+  @override
+  Future<ThemeMode?> read() async {
+    if (failRead) {
+      throw StateError('Skladište nije dostupno');
+    }
+    return mode;
+  }
+
+  @override
+  Future<void> write(ThemeMode value) async => mode = value;
 }
 
 AuthSession sessionExpiringIn(Duration duration) => AuthSession(
