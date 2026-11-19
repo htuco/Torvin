@@ -62,3 +62,68 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 { "login": "{{email}}", "password": "Torvin.2027!", "app": "Mobile" }
+
+# ---------- Kartice (seed korisnik mobile/test). Kod za aktivaciju stiže u Mailpit
+
+### 10. Prijava korisnika (200)
+# @name mobile
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{ "login": "mobile", "password": "test", "app": "Mobile" }
+
+### 11. Nova kartica (201, status Pending). Pun broj se samo provjerava, čuvaju se zadnje 4 cifre i mreža
+# @name card
+POST {{baseUrl}}/cards
+Authorization: Bearer {{mobile.response.body.token}}
+Content-Type: application/json
+
+{ "cardTypeId": 1, "currencyId": 1, "name": "Online kupovina", "cardNumber": "5555555555554444", "expiry": "08/29" }
+
+### 12. Aktivacija kodom iz posljednjeg maila u Mailpitu (200, status Active)
+POST {{baseUrl}}/cards/{{card.response.body.id}}/verify
+Authorization: Bearer {{mobile.response.body.token}}
+Content-Type: application/json
+
+{ "code": "000000" }
+
+### 13. Blokiranje (200, status Blocked)
+POST {{baseUrl}}/cards/{{card.response.body.id}}/block
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 14. Deblokiranje (200, status Active)
+POST {{baseUrl}}/cards/{{card.response.body.id}}/unblock
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 15. Prijava krađe (200, status Stolen, konačno)
+POST {{baseUrl}}/cards/{{card.response.body.id}}/report
+Authorization: Bearer {{mobile.response.body.token}}
+Content-Type: application/json
+
+{ "reason": "Stolen", "note": "Ukradena u tramvaju." }
+
+### 16. Deblokiranje ukradene kartice (400, "Kartica prijavljena kao ukradena ne može se ponovo aktivirati.")
+POST {{baseUrl}}/cards/{{card.response.body.id}}/unblock
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 17. Moje kartice, nova je prva (200)
+GET {{baseUrl}}/cards?page=1&pageSize=20
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 18. Prijava administratora (200)
+# @name desktop
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{ "login": "desktop", "password": "test", "app": "Desktop" }
+
+### 19. Sve kartice, filter po statusu Blocked (200)
+GET {{baseUrl}}/admin/cards?cardStatusId=3
+Authorization: Bearer {{desktop.response.body.token}}
+
+### 20. Admin zatvara ukradenu karticu (200 kad je balans 0, inače 400)
+PUT {{baseUrl}}/admin/cards/{{card.response.body.id}}/status
+Authorization: Bearer {{desktop.response.body.token}}
+Content-Type: application/json
+
+{ "cardStatusId": 6, "reason": "Zatvaranje poslije prijave krađe." }
