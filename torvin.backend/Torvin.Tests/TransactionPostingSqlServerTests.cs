@@ -26,24 +26,6 @@ public class TransactionPostingSqlServerTests(SqlServerFixture database)
         public DateTime TokenExpiresAt => DateTime.UtcNow.AddHours(1);
     }
 
-    // Prije prvog snimanja jednom izvrši akciju (drugi prenos kroz drugu konekciju)
-    private sealed class BeforeFirstSave(Func<Task> action) : SaveChangesInterceptor
-    {
-        private bool _done;
-
-        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData,
-            InterceptionResult<int> result, CancellationToken cancellationToken = default)
-        {
-            if (!_done)
-            {
-                _done = true;
-                await action();
-            }
-
-            return result;
-        }
-    }
-
     // Obori snimanje audit zapisa, tj. drugi korak knjiženja, poslije prvog koji je već upisao balanse i transakciju
     private sealed class FailOnAuditSave : SaveChangesInterceptor
     {
