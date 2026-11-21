@@ -1,4 +1,6 @@
 using Torvin.Services.Configuration;
+using Torvin.Services.Database;
+using Torvin.Services.Notifications;
 using Torvin.Worker.Consumers;
 using Torvin.Worker.Email;
 
@@ -10,9 +12,21 @@ builder.Services.AddDatabaseOptions();
 builder.Services.AddRabbitMqOptions();
 builder.Services.AddSmtpOptions();
 
+builder.Services.AddTorvinDatabase();
+
+builder.Services.AddSingleton<RabbitMqConnectionProvider>();
+builder.Services.AddSingleton<RetryPolicy>();
+
 builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
 builder.Services.AddSingleton<EmailMessageHandler>();
 builder.Services.AddHostedService<EmailConsumer>();
+
+// Handleri koji pišu u bazu su scoped: consumer pravi novi scope za svaku poruku
+builder.Services.AddScoped<NotificationWriter>();
+builder.Services.AddScoped<TransactionCompletedHandler>();
+builder.Services.AddScoped<CardStatusChangedHandler>();
+builder.Services.AddHostedService<TransactionCompletedConsumer>();
+builder.Services.AddHostedService<CardStatusChangedConsumer>();
 
 using var host = builder.Build();
 
