@@ -4,7 +4,8 @@ using Torvin.Services.Messaging;
 
 namespace Torvin.Tests;
 
-// Testovi nemaju RabbitMQ: poruke se pamte, a test može u trenutku objave provjeriti stanje baze
+// Testovi nemaju RabbitMQ: poruke se pamte, a test može u trenutku objave provjeriti stanje baze.
+// Događaj na exchange se pamti u istoj listi, a Queue tada nosi ime exchangea
 public sealed class FakeMessagePublisher : IMessagePublisher
 {
     private readonly ConcurrentQueue<(string Queue, IMessage Message)> _published = new();
@@ -23,4 +24,8 @@ public sealed class FakeMessagePublisher : IMessagePublisher
 
         _published.Enqueue((queue, message));
     }
+
+    public Task PublishEventAsync<T>(string exchange, T message, CancellationToken cancellationToken = default)
+        where T : IMessage =>
+        PublishAsync(exchange, message, cancellationToken);
 }

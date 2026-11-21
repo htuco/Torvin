@@ -26,6 +26,8 @@ public static class ServiceExtensions
         services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ICardService, CardService>();
+        services.AddScoped<ITransactionService, TransactionService>();
+        services.AddScoped<IRecipientService, RecipientService>();
         return services;
     }
 }

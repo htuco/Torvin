@@ -7,6 +7,10 @@ public static class AuditActions
 
     // Svaki prelaz statusa kartice osim blokiranja, koje ima svoju akciju
     public const string CardStatusChanged = "CardStatusChanged";
+
+    // Knjižen prenos: stari i novi balans obje kartice
+    public const string TransactionCompleted = "TransactionCompleted";
+
     public const string ReversalApproved = "ReversalApproved";
     public const string ReversalRejected = "ReversalRejected";
     public const string UserDeactivated = "UserDeactivated";

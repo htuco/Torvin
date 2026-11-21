@@ -43,6 +43,8 @@ public sealed class AuthService(
     // Koliko posljednjih lozinki reset ne smije ponoviti
     public const int PasswordHistoryDepth = 3;
 
+    public const string AccountBlocked = "Račun je blokiran. Obratite se podršci.";
+
     // Ista poruka za nepostojeći račun i pogrešnu lozinku, da odgovor ne otkriva koji računi postoje
     public const string InvalidCredentials = "Pogrešno korisničko ime ili lozinka.";
 
@@ -118,7 +120,7 @@ public sealed class AuthService(
         // Ove provjere idu tek poslije lozinke, da se stanje računa ne otkriva bez ispravne lozinke
         if (!user.IsActive)
         {
-            throw new ForbiddenException("Račun je blokiran. Obratite se podršci.");
+            throw new ForbiddenException(AccountBlocked);
         }
 
         // Novi kod ide kroz prijavu, pa nema posebnog anonimnog endpointa za ponovno slanje

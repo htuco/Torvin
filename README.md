@@ -52,8 +52,13 @@ cd torvin.backend
 dotnet tool restore                    # dotnet-ef iz dotnet-tools.json, za migracije
 dotnet run --project Torvin.API
 dotnet run --project Torvin.Worker
-dotnet test Torvin.slnx
+dotnet test Torvin.slnx                # traži upaljen Docker (SQL Server testovi)
+dotnet test Torvin.slnx --filter "Category!=SqlServer"   # brzo, bez Dockera
 ```
+
+Većina testova radi nad bazom u memoriji. Testovi prenosa novca (`Category=SqlServer`) sami podignu pravi SQL Server
+u Dockeru (Testcontainers, isti image kao u `docker-compose.yml`), jer baza u memoriji nema transakcije ni provjeru
+istovremenih izmjena. Bez upaljenog Dockera ti testovi padaju.
 
 API pri startu sam primijeni migracije i kreira bazu `230181` ako ne postoji, pa baza mora biti
 podignuta prije API-ja. Ako varijabla fali, aplikacija ne starta i ispiše koje varijable nedostaju. Swagger je na
@@ -93,8 +98,8 @@ bude opozvan, aplikacija se vrati na prijavu.
 Release build se pravi u GitHub Actions, jer Windows build traži Windows mašinu. Workflow `build-release` se pokreće
 ručno (Actions → build-release → Run workflow) i daje dva artefakta: `windows-release` (folder `Release/` s
 `torvin_desktop.exe`, API na `http://localhost:5080`) i `android-apk` (`app-release.apk`, API na `http://10.0.2.2:5080`).
-Svaki pull request prolazi workflow `ci`: build backenda bez upozorenja, testovi backenda, te `flutter analyze` i
-`flutter test` za sva tri Flutter projekta.
+Svaki pull request prolazi workflow `ci`: build backenda bez upozorenja, svi testovi backenda (i oni nad SQL Serverom,
+jer runner ima Docker), te `flutter analyze` i `flutter test` za sva tri Flutter projekta.
 
 ## Pristupni podaci
 
@@ -213,6 +218,34 @@ Korisnik (mobilna) radi samo sa svojim karticama, a tuđa kartica vraća 404, is
 - Svaka promjena statusa ostaje u audit tragu (ko, kad, stari i novi status, razlog) i šalje poruku u red
   `card-status`. Worker te poruke još ne čita: notifikacija vlasniku dolazi s taskom 12, a do tada poruke
   čekaju u redu (vidi se u RabbitMQ UI-ju).
+
+## Transakcije
+
+Korisnik (mobilna) šalje novac sa svoje aktivne kartice drugom korisniku i vidi svoju historiju. Tuđa transakcija
+vraća 404. Cijeli tok je u `torvin.backend/Torvin.API/Torvin.API.http` (koraci 21–27).
+
+| Ruta | Ko | Šta |
+|---|---|---|
+| `GET /recipients/search?fts=` | korisnik | primaoci po imenu, prezimenu, korisničkom imenu ili tačnom emailu; najmanje 3 znaka, najviše 10 rezultata |
+| `POST /transactions` | korisnik | prenos: `fromCardId`, `toUserId`, `amount`, `note`, `transactionCategoryId` (opcionalno) |
+| `GET /transactions` | korisnik | poslane i primljene, najnovije prve; filteri `dateFrom`, `dateTo`, `transactionTypeId`, `transactionStatusId`, `cardId`, `amountFrom`, `amountTo`, `direction` (`Sent`, `Received`), `fts` (napomena, broj reference, druga strana) |
+| `GET /transactions/{id}` | korisnik | detalji, iz pogleda pošiljaoca ili primaoca |
+
+- **Valuta je valuta kartice pošiljaoca.** Nema konverzije: primalac mora imati aktivnu karticu u istoj valuti.
+  Novac ide na njegovu podrazumijevanu karticu ako je aktivna i u toj valuti, inače na najstariju takvu karticu.
+  Klijent nikad ne šalje ID tuđe kartice.
+- **Provjere na serveru**, svaka s porukom ispod polja: kartica je moja i aktivna, primalac je drugi aktivan
+  korisnik, iznos je između 0,01 i 100.000,00 s najviše dvije decimale (više decimala se odbija, ne zaokružuje),
+  ima dovoljno sredstava, kategorija postoji. Blokiran račun ne može slati (403).
+- **Sve ili ništa.** Skidanje s jedne kartice, dodavanje na drugu, zapis transakcije i audit zapis (stari i novi
+  balans obje kartice) idu u jednoj transakciji baze. Ako bilo koji korak padne, ne ostaje ništa.
+- **Dva istovremena prenosa** nad istom karticom ne mogu potrošiti isti balans: kartica ima verziju reda, pa drugi
+  upis dobija poruku "Kartica je u međuvremenu promijenjena. Osvježite podatke i pokušajte ponovo.".
+- Korisnik vidi broj reference (`TRV20261121004817`), a od tuđe kartice samo zadnje 4 cifre. Primalac ne vidi
+  neuspjele prenose, jer se njemu ništa nije desilo.
+- Poslije knjiženja API objavljuje događaj `TransactionCompleted` na fanout exchange `transaction-completed`.
+  Svaki zainteresovani dio Workera ima svoj red vezan za njega. Prvi je `transaction-completed.notifications`
+  (notifikacija primaocu dolazi s taskom 12), a budžet i anomalije dobijaju svoje redove poslije.
 
 ## Model baze
 

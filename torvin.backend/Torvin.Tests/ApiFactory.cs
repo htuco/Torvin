@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -65,6 +66,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IDbContextOptionsConfiguration<TorvinDbContext>>();
             services.AddDbContext<TorvinDbContext>((provider, options) => options
                 .UseInMemoryDatabase(_databaseName)
+                // Baza u memoriji nema transakcije, a prenos novca ih otvara zbog SQL Servera (kao TestDatabase)
+                .ConfigureWarnings(warnings => warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning))
                 .AddInterceptors(
                     provider.GetRequiredService<SoftDeleteInterceptor>(),
                     provider.GetRequiredService<AuditFieldsInterceptor>()));
