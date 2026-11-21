@@ -167,3 +167,50 @@ Authorization: Bearer {{mobile.response.body.token}}
 Content-Type: application/json
 
 { "fromCardId": {{myCard.response.body.$.items[0].id}}, "toUserId": {{recipient.response.body.$.items[0].userId}}, "amount": 99999 }
+
+# ---------- Omiljeni primaoci i QR kod za primanje (mobile ima 3 omiljena iz seeda)
+
+### 28. Omiljeni primaoci, pretraga po nadimku ili imenu (200)
+# @name favorites
+GET {{baseUrl}}/favorite-recipients?page=1&pageSize=20
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 29. Tarik je već omiljeni (400, "Primalac je već među omiljenim.")
+POST {{baseUrl}}/favorite-recipients
+Authorization: Bearer {{mobile.response.body.token}}
+Content-Type: application/json
+
+{ "recipientUserId": {{recipient.response.body.$.items[0].userId}}, "nickname": "Tarik" }
+
+### 30. Novi nadimak prvog omiljenog (200)
+PUT {{baseUrl}}/favorite-recipients/{{favorites.response.body.$.items[0].id}}
+Authorization: Bearer {{mobile.response.body.token}}
+Content-Type: application/json
+
+{ "nickname": "Najbolji drug" }
+
+### 31. Kod za QR na glavnu karticu, s predloženim iznosom (200, važi 15 minuta)
+# @name receiveCode
+GET {{baseUrl}}/cards/{{myCard.response.body.$.items[0].id}}/receive-code?amount=25
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 32. Prijava Amine, koja skenira kod (200)
+# @name amina
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{ "login": "amina.hodzic", "password": "test", "app": "Mobile" }
+
+### 33. Amina razriješi kod (200: ime, maskirana kartica, valuta i iznos; userId ide u POST /transactions)
+POST {{baseUrl}}/recipients/resolve-code
+Authorization: Bearer {{amina.response.body.token}}
+Content-Type: application/json
+
+{ "code": "{{receiveCode.response.body.code}}" }
+
+### 34. Podmetnut kod (400, "QR kod nije ispravan.")
+POST {{baseUrl}}/recipients/resolve-code
+Authorization: Bearer {{amina.response.body.token}}
+Content-Type: application/json
+
+{ "code": "torvin:v1:OTl8fDE4OTM0OTkyMDA.AAAA" }
