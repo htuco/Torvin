@@ -127,3 +127,43 @@ Authorization: Bearer {{desktop.response.body.token}}
 Content-Type: application/json
 
 { "cardStatusId": 6, "reason": "Zatvaranje poslije prijave krađe." }
+
+### 21. Glavna aktivna kartica korisnika (200). Treba za prenos
+# @name myCard
+GET {{baseUrl}}/cards?cardStatusId=2&fts=Glavna
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 22. Pretraga primaoca, najmanje 3 znaka (200, bez emaila u odgovoru)
+# @name recipient
+GET {{baseUrl}}/recipients/search?fts=tarik
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 23. Prenos (201). Valuta je valuta kartice, a novac ide na Tarikovu karticu u istoj valuti
+# @name transfer
+POST {{baseUrl}}/transactions
+Authorization: Bearer {{mobile.response.body.token}}
+Content-Type: application/json
+
+{ "fromCardId": {{myCard.response.body.$.items[0].id}}, "toUserId": {{recipient.response.body.$.items[0].userId}}, "amount": 25.50, "note": "Za kino" }
+
+### 24. Detalji prenosa (200, druga strana bez ID-a kartice)
+GET {{baseUrl}}/transactions/{{transfer.response.body.id}}
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 25. Historija: poslane u ovom mjesecu, najnovije prve (200)
+GET {{baseUrl}}/transactions?direction=Sent&dateFrom=2026-11-01&page=1&pageSize=20
+Authorization: Bearer {{mobile.response.body.token}}
+
+### 26. Iznos s tri decimale (400, greška po polju amount)
+POST {{baseUrl}}/transactions
+Authorization: Bearer {{mobile.response.body.token}}
+Content-Type: application/json
+
+{ "fromCardId": {{myCard.response.body.$.items[0].id}}, "toUserId": {{recipient.response.body.$.items[0].userId}}, "amount": 1.005 }
+
+### 27. Više od balansa (400, "Nedovoljno sredstava na kartici •••• ...")
+POST {{baseUrl}}/transactions
+Authorization: Bearer {{mobile.response.body.token}}
+Content-Type: application/json
+
+{ "fromCardId": {{myCard.response.body.$.items[0].id}}, "toUserId": {{recipient.response.body.$.items[0].userId}}, "amount": 99999 }
