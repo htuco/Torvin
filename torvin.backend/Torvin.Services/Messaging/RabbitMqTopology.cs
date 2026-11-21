@@ -12,6 +12,17 @@ public static class RabbitMqTopology
     public static Task DeclareCardStatusQueuesAsync(IChannel channel, CancellationToken cancellationToken = default) =>
         DeclareWithDeadLetterAsync(channel, QueueNames.CardStatus, QueueNames.CardStatusDeadLetter, cancellationToken);
 
+    // Exchange i red notifikacija. Budžet i anomalije poslije vežu svoje redove za isti exchange
+    public static async Task DeclareTransactionCompletedAsync(IChannel channel, CancellationToken cancellationToken = default)
+    {
+        await channel.ExchangeDeclareAsync(ExchangeNames.TransactionCompleted, ExchangeType.Fanout, durable: true,
+            autoDelete: false, cancellationToken: cancellationToken);
+        await DeclareWithDeadLetterAsync(channel, QueueNames.TransactionNotifications,
+            QueueNames.TransactionNotificationsDeadLetter, cancellationToken);
+        await channel.QueueBindAsync(QueueNames.TransactionNotifications, ExchangeNames.TransactionCompleted, routingKey: "",
+            cancellationToken: cancellationToken);
+    }
+
     private static async Task DeclareWithDeadLetterAsync(IChannel channel, string queue, string deadLetterQueue,
         CancellationToken cancellationToken)
     {

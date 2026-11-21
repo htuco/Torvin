@@ -15,7 +15,16 @@ public sealed class RabbitMqPublisher(IOptions<RabbitMqOptions> options, ILogger
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
     private IConnection? _connection;
 
-    public async Task PublishAsync<T>(string queue, T message, CancellationToken cancellationToken = default)
+    public Task PublishAsync<T>(string queue, T message, CancellationToken cancellationToken = default)
+        where T : IMessage =>
+        PublishCoreAsync(exchange: "", routingKey: queue, message, cancellationToken);
+
+    // Fanout exchange ne gleda routing key, pa je prazan
+    public Task PublishEventAsync<T>(string exchange, T message, CancellationToken cancellationToken = default)
+        where T : IMessage =>
+        PublishCoreAsync(exchange, routingKey: "", message, cancellationToken);
+
+    private async Task PublishCoreAsync<T>(string exchange, string routingKey, T message, CancellationToken cancellationToken)
         where T : IMessage
     {
         var connection = await GetConnectionAsync(cancellationToken);
@@ -30,11 +39,12 @@ public sealed class RabbitMqPublisher(IOptions<RabbitMqOptions> options, ILogger
         };
         var body = JsonSerializer.SerializeToUtf8Bytes(message);
 
-        await channel.BasicPublishAsync(exchange: "", routingKey: queue, mandatory: false, basicProperties: properties,
-            body: body, cancellationToken: cancellationToken);
+        await channel.BasicPublishAsync(exchange: exchange, routingKey: routingKey, mandatory: false,
+            basicProperties: properties, body: body, cancellationToken: cancellationToken);
 
         // Tijelo se ne loguje, jer nosi kod za potvrdu i adresu primaoca
-        logger.LogInformation("Poruka {MessageId} je objavljena u red {Queue}.", messageId, queue);
+        logger.LogInformation("Poruka {MessageId} je objavljena u {Destination}.", messageId,
+            exchange.Length == 0 ? routingKey : exchange);
     }
 
     private async Task<IConnection> GetConnectionAsync(CancellationToken cancellationToken)
@@ -64,6 +74,7 @@ public sealed class RabbitMqPublisher(IOptions<RabbitMqOptions> options, ILogger
             await using var channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
             await RabbitMqTopology.DeclareEmailQueuesAsync(channel, cancellationToken);
             await RabbitMqTopology.DeclareCardStatusQueuesAsync(channel, cancellationToken);
+            await RabbitMqTopology.DeclareTransactionCompletedAsync(channel, cancellationToken);
             return _connection;
         }
         finally
