@@ -28,7 +28,7 @@ public class EmailMessageHandlerTests
     private static (EmailMessageHandler Handler, List<TimeSpan> Delays) NewHandler(IEmailSender sender)
     {
         var delays = new List<TimeSpan>();
-        var handler = new EmailMessageHandler(sender, NullLogger<EmailMessageHandler>.Instance)
+        var retry = new RetryPolicy(NullLogger<RetryPolicy>.Instance)
         {
             Delay = (delay, _) =>
             {
@@ -36,7 +36,7 @@ public class EmailMessageHandlerTests
                 return Task.CompletedTask;
             },
         };
-        return (handler, delays);
+        return (new EmailMessageHandler(sender, retry, NullLogger<EmailMessageHandler>.Instance), delays);
     }
 
     private static ReadOnlyMemory<byte> Message() =>

@@ -216,8 +216,7 @@ Korisnik (mobilna) radi samo sa svojim karticama, a tuđa kartica vraća 404, is
   Iz `Lost`, `Stolen` i `Closed` nema povratka, a nedozvoljen prelaz vraća 400 s razlogom ("Kartica prijavljena
   kao ukradena ne može se ponovo aktivirati.").
 - Svaka promjena statusa ostaje u audit tragu (ko, kad, stari i novi status, razlog) i šalje poruku u red
-  `card-status`. Worker te poruke još ne čita: notifikacija vlasniku dolazi s taskom 12, a do tada poruke
-  čekaju u redu (vidi se u RabbitMQ UI-ju).
+  `card-status`, iz koje Worker pravi notifikaciju vlasniku (vidi Notifikacije).
 
 ## Transakcije
 
@@ -245,7 +244,29 @@ vraća 404. Cijeli tok je u `torvin.backend/Torvin.API/Torvin.API.http` (koraci 
   neuspjele prenose, jer se njemu ništa nije desilo.
 - Poslije knjiženja API objavljuje događaj `TransactionCompleted` na fanout exchange `transaction-completed`.
   Svaki zainteresovani dio Workera ima svoj red vezan za njega. Prvi je `transaction-completed.notifications`
-  (notifikacija primaocu dolazi s taskom 12), a budžet i anomalije dobijaju svoje redove poslije.
+  (notifikacije, vidi dolje), a budžet i anomalije dobijaju svoje redove poslije.
+
+## Notifikacije
+
+Notifikacije pravi Worker iz događaja koje objavi API, i upisuje ih u tabelu `Notifications` (nepročitane). Čitanje
+kroz API i osvježavanje na mobilnoj dolaze s taskovima 20 i 21.
+
+| Događaj (red) | Ko dobija | Primjer |
+|---|---|---|
+| `TransactionCompleted` (`transaction-completed.notifications`) | primalac | "Primili ste 1.245,00 BAM na karticu •••• 8241. Pošiljalac: Emir Kovačević." |
+| | pošiljalac (potvrda) | "Poslali ste 1.245,00 BAM s kartice •••• 3020. Primalac: Tarik Begić." |
+| `CardStatusChanged` (`card-status`) | vlasnik, kad je kartica blokirana, izgubljena ili ukradena | "Kartica •••• 4821 je blokirana." |
+| | vlasnik, za svaku promjenu koju uradi administrator (s razlogom) | "Administrator je promijenio status kartice •••• 4821 u "Zatvorena". Razlog: …" |
+
+- Aktivacija i deblokiranje koje uradi sam vlasnik ne prave notifikaciju.
+- **Ista poruka ne pravi dvije notifikacije.** Svaka notifikacija pamti Id poruke iz koje je nastala, a jedinstveni
+  indeks `(SourceMessageId, UserId)` to čuva i kad se ista poruka obrađuje dvaput u isto vrijeme (npr. poslije
+  restarta Workera RabbitMQ ponovo isporuči nepotvrđenu poruku).
+- Svaka poruka se obrađuje u svom scope-u baze. Prolazna greška (npr. baza još nije spremna) se ponavlja poslije 1,
+  2, 4 i 8 sekundi, a onda poruka ide u `*.dlq`. Neispravna poruka ili nepostojeća transakcija ili kartica idu u
+  `*.dlq` odmah. Poruka se potvrđuje tek kad je notifikacija upisana.
+- Svi consumeri Workera (`email`, `card-status`, `transaction-completed.notifications`) dijele jednu konekciju
+  prema RabbitMQ-u, a svaki ima svoj kanal i obrađuje jednu poruku odjednom.
 
 ## Model baze
 

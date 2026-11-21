@@ -684,6 +684,9 @@ namespace Torvin.Services.Migrations
                     b.Property<int?>("RelatedEntityId")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("SourceMessageId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -697,11 +700,15 @@ namespace Torvin.Services.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SourceMessageId", "UserId")
+                        .IsUnique()
+                        .HasFilter("[SourceMessageId] IS NOT NULL");
+
                     b.HasIndex("UserId", "IsRead");
 
                     b.ToTable("Notifications", t =>
                         {
-                            t.HasCheckConstraint("CK_Notifications_Type", "[Type] BETWEEN 1 AND 9");
+                            t.HasCheckConstraint("CK_Notifications_Type", "[Type] BETWEEN 1 AND 11");
                         });
                 });
 

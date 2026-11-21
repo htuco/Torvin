@@ -157,7 +157,8 @@ erDiagram
         string Message "1000"
         bool IsRead
         datetime ReadAt "null"
-        int RelatedEntityId "null" }
+        int RelatedEntityId "null"
+        guid SourceMessageId "null, unique sa UserId" }
     News { int Id PK
         int AuthorUserId FK
         string Title "150"
