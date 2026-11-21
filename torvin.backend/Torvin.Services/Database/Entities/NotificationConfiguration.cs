@@ -16,6 +16,9 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         // Polling broja nepročitanih ide po ovom indeksu
         builder.HasIndex(n => new { n.UserId, n.IsRead });
 
+        // Idempotentnost Workera: ista poruka najviše jednom po korisniku, i kad je dvije obrade upišu istovremeno
+        builder.HasIndex(n => new { n.SourceMessageId, n.UserId }).IsUnique().HasFilter("[SourceMessageId] IS NOT NULL");
+
         builder.HasOne(n => n.User).WithMany().HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.Restrict);
     }
 }

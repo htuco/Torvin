@@ -700,6 +700,16 @@ public sealed class DataSeeder(TorvinDbContext context, ILogger<DataSeeder> logg
             isRead = true;
         }
 
+        // Potvrda pošiljaocu za posljednji prenos koji je mobilni korisnik poslao
+        var sent = _transactions
+            .Where(t => t.SenderUser == mobile && t.TransactionType.Code == TransactionTypeCodes.Transfer
+                && t.TransactionStatus.Code == TransactionStatusCodes.Completed)
+            .OrderByDescending(t => t.CreatedAt)
+            .First();
+        Notify(mobile, NotificationType.TransactionSent, "Uplata poslana",
+            $"Poslali ste {Amount(sent)} s kartice •••• {sent.SenderCard!.Last4Digits}. Primalac: {FullName(sent.ReceiverUser)}.",
+            sent.CreatedAt, isRead: true, sent.Id);
+
         foreach (var reversal in reversals.Where(r => r.Status != ReversalRequestStatus.Pending))
         {
             var approved = reversal.Status == ReversalRequestStatus.Approved;
@@ -751,6 +761,9 @@ public sealed class DataSeeder(TorvinDbContext context, ILogger<DataSeeder> logg
             $"Kartica •••• {cards["mobileBlocked"].Last4Digits} je blokirana.", _mobileCardBlockedAt, isRead: true, cards["mobileBlocked"].Id);
         Notify(users["dino"], NotificationType.CardBlocked, "Kartica blokirana",
             $"Administrator je blokirao vašu karticu •••• {cards["dino"].Last4Digits}.", _dinoBlockedAt, isRead: false, cards["dino"].Id);
+        Notify(users["kenan"], NotificationType.CardStatusChanged, "Kartica prijavljena kao ukradena",
+            $"Kartica •••• {cards["kenanStolen"].Last4Digits} je prijavljena kao ukradena i više se ne može koristiti.",
+            DaysAgo(12), isRead: true, cards["kenanStolen"].Id);
 
         foreach (var item in news.TakeLast(2))
         {

@@ -15,4 +15,7 @@ public class Notification : BaseEntity
 
     // Zapis na koji se notifikacija odnosi; tip zapisa određuje Type
     public int? RelatedEntityId { get; set; }
+
+    // Id poruke iz koje je nastala. Ista poruka obrađena dvaput ne pravi dvije notifikacije
+    public Guid? SourceMessageId { get; set; }
 }
