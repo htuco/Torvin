@@ -12,7 +12,7 @@ namespace Torvin.API.Controllers;
 [ApiController]
 [Route("cards")]
 [Authorize(Roles = AppRoles.User)]
-public sealed class CardsController(ICardService cardService) : ControllerBase
+public sealed class CardsController(ICardService cardService, IReceiveCodeService receiveCodeService) : ControllerBase
 {
     [HttpGet]
     public Task<PagedResult<CardResponse>> Get([FromQuery] CardSearchObject search, CancellationToken cancellationToken) =>
@@ -48,4 +48,9 @@ public sealed class CardsController(ICardService cardService) : ControllerBase
     [HttpPost("{id:int}/report")]
     public Task<CardResponse> Report(int id, CardReportRequest request, CancellationToken cancellationToken) =>
         cardService.ReportAsync(id, request, cancellationToken);
+
+    // Kod za QR kojim drugi korisnik šalje novac na ovu karticu, opcionalno s predloženim iznosom
+    [HttpGet("{id:int}/receive-code")]
+    public Task<ReceiveCodeResponse> ReceiveCode(int id, [FromQuery] decimal? amount, CancellationToken cancellationToken) =>
+        receiveCodeService.CreateAsync(id, amount, cancellationToken);
 }

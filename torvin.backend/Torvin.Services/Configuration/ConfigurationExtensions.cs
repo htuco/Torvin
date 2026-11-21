@@ -23,6 +23,12 @@ public static class ConfigurationExtensions
             o.ExpiresMinutes = ReadInt(c, EnvVars.JwtExpiresMinutes);
         });
 
+    public static IServiceCollection AddReceiveCodeOptions(this IServiceCollection services) =>
+        services.AddEnvOptions<ReceiveCodeOptions>((o, c) =>
+        {
+            o.Key = c[EnvVars.ReceiveCodeKey] ?? "";
+        });
+
     public static IServiceCollection AddRabbitMqOptions(this IServiceCollection services) =>
         services.AddEnvOptions<RabbitMqOptions>((o, c) =>
         {

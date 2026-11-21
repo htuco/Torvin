@@ -25,6 +25,7 @@ builder.Services.AddApiOptions();
 builder.Services.AddDatabaseOptions();
 builder.Services.AddTorvinDatabase();
 builder.Services.AddJwtOptions();
+builder.Services.AddReceiveCodeOptions();
 builder.Services.AddRabbitMqOptions();
 builder.Services.AddCorsOptions();
 builder.Services.AddTorvinServices();

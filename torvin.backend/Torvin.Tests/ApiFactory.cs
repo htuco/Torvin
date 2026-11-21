@@ -38,6 +38,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         [EnvVars.JwtIssuer] = "torvin-test",
         [EnvVars.JwtAudience] = "torvin-test",
         [EnvVars.JwtExpiresMinutes] = "60",
+        [EnvVars.ReceiveCodeKey] = "fedcba9876543210fedcba9876543210",
         [EnvVars.RabbitMqHost] = "rabbitmq-test",
         [EnvVars.RabbitMqPort] = "5672",
         [EnvVars.RabbitMqUser] = "test",

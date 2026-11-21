@@ -1,9 +1,11 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Torvin.Model.Constants;
 using Torvin.Model.Exceptions;
 using Torvin.Model.Responses;
 using Torvin.Model.SearchObjects;
 using Torvin.Services.Database;
+using Torvin.Services.Database.Entities;
 using Torvin.Services.Security;
 
 namespace Torvin.Services.Services;
@@ -22,6 +24,11 @@ public sealed class RecipientService(TorvinDbContext context, ICurrentUserServic
 
     public const string QueryTooShort = "Unesite najmanje 3 znaka za pretragu.";
 
+    // Ko stvarno može primiti novac: aktivan, potvrđen korisnik (ne admin) s bar jednom aktivnom karticom. Isto pravilo
+    // važi za pretragu, omiljene primaoce i QR kod
+    public static readonly Expression<Func<User, bool>> CanReceiveMoney = u => u.IsActive && u.EmailConfirmed
+        && u.Role.Name == AppRoles.User && u.Cards.Any(c => c.CardStatus.Code == CardStatusCodes.Active);
+
     public Task<PagedResult<RecipientResponse>> SearchAsync(RecipientSearchObject search,
         CancellationToken cancellationToken = default)
     {
@@ -34,10 +41,9 @@ public sealed class RecipientService(TorvinDbContext context, ICurrentUserServic
         var userId = currentUser.UserId;
         search.PageSize = Math.Min(search.PageSize, MaxResults);
 
-        // Nude se samo korisnici koji stvarno mogu primiti novac: aktivni, potvrđeni, s bar jednom aktivnom karticom
         return context.Users.AsNoTracking()
-            .Where(u => u.Id != userId && u.IsActive && u.EmailConfirmed && u.Role.Name == AppRoles.User
-                && u.Cards.Any(c => c.CardStatus.Code == CardStatusCodes.Active))
+            .Where(u => u.Id != userId)
+            .Where(CanReceiveMoney)
             .Where(u => u.FirstName.Contains(fts) || u.LastName.Contains(fts) || u.Username.Contains(fts)
                 || (u.FirstName + " " + u.LastName).Contains(fts) || u.Email == fts)
             .OrderBy(u => u.LastName)
