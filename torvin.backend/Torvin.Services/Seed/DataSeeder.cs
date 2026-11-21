@@ -6,6 +6,7 @@ using Torvin.Model.Enums;
 using Torvin.Services.Database;
 using Torvin.Services.Database.Entities;
 using Torvin.Services.Security;
+using Torvin.Services.Services;
 
 namespace Torvin.Services.Seed;
 
@@ -830,7 +831,7 @@ public sealed class DataSeeder(TorvinDbContext context, ILogger<DataSeeder> logg
         string number;
         do
         {
-            number = $"TRV{at:yyyyMMdd}{_random.Next(0, 1_000_000):D6}";
+            number = TransactionReference.Format(at, _random.Next(0, 1_000_000));
         } while (!_referenceNumbers.Add(number));
 
         return number;
