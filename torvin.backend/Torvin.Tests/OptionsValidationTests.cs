@@ -63,6 +63,19 @@ public class OptionsValidationTests
     }
 
     [Fact]
+    public void ShortReceiveCodeKey_ErrorDoesNotContainValue()
+    {
+        using var provider = BuildProvider(new Dictionary<string, string?> { ["RECEIVE_CODE_KEY"] = "kratak-qr-kljuc" },
+            services => services.AddReceiveCodeOptions());
+
+        var exception = Assert.Throws<OptionsValidationException>(
+            () => provider.GetRequiredService<IOptions<ReceiveCodeOptions>>().Value);
+
+        Assert.Contains("RECEIVE_CODE_KEY mora imati najmanje 32 znaka.", exception.Message);
+        Assert.DoesNotContain("kratak-qr-kljuc", exception.Message);
+    }
+
+    [Fact]
     public void InvalidPort_ErrorNamesVariableWithoutValue()
     {
         var variables = new Dictionary<string, string?>

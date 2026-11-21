@@ -11,4 +11,7 @@ internal static class ConfigRules
     public const int JwtKeyMinLength = 32;
     public const int JwtMinExpiresMinutes = 1;
     public const int JwtMaxExpiresMinutes = 1440;
+
+    // HMAC-SHA256 potpis QR koda, isto 256 bita
+    public const int ReceiveCodeKeyMinLength = 32;
 }

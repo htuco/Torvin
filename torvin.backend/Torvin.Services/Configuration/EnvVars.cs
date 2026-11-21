@@ -13,6 +13,8 @@ public static class EnvVars
     public const string JwtAudience = "JWT_AUDIENCE";
     public const string JwtExpiresMinutes = "JWT_EXPIRES_MINUTES";
 
+    public const string ReceiveCodeKey = "RECEIVE_CODE_KEY";
+
     public const string RabbitMqHost = "RABBITMQ_HOST";
     public const string RabbitMqPort = "RABBITMQ_PORT";
     public const string RabbitMqUser = "RABBITMQ_USER";

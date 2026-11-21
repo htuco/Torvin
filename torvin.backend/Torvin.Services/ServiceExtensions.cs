@@ -12,6 +12,7 @@ public static class ServiceExtensions
         services.AddMemoryCache();
 
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<IReceiveCodeSigner, ReceiveCodeSigner>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ITokenRevocationService, TokenRevocationService>();
         services.AddScoped<IEmailCodeService, EmailCodeService>();
@@ -28,6 +29,8 @@ public static class ServiceExtensions
         services.AddScoped<ICardService, CardService>();
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<IRecipientService, RecipientService>();
+        services.AddScoped<IFavoriteRecipientService, FavoriteRecipientService>();
+        services.AddScoped<IReceiveCodeService, ReceiveCodeService>();
         return services;
     }
 }

@@ -246,6 +246,34 @@ vraća 404. Cijeli tok je u `torvin.backend/Torvin.API/Torvin.API.http` (koraci 
   Svaki zainteresovani dio Workera ima svoj red vezan za njega. Prvi je `transaction-completed.notifications`
   (notifikacije, vidi dolje), a budžet i anomalije dobijaju svoje redove poslije.
 
+## Omiljeni primaoci i QR kod
+
+Korisnik čuva primaoce kojima često šalje novac, a QR kodom drugima daje svoju karticu za primanje. Tok je u
+`torvin.backend/Torvin.API/Torvin.API.http` (koraci 28–34).
+
+| Ruta | Ko | Šta |
+|---|---|---|
+| `GET /favorite-recipients` | korisnik | moji omiljeni primaoci, po prezimenu; `fts` (nadimak, ime, prezime, korisničko ime) |
+| `POST /favorite-recipients` | korisnik | novi omiljeni: `recipientUserId` (iz pretrage ili QR koda), `nickname` (do 50 znakova) |
+| `PUT /favorite-recipients/{id}` | korisnik | novi nadimak |
+| `DELETE /favorite-recipients/{id}` | korisnik | uklanjanje (meko brisanje, primalac se kasnije može ponovo dodati) |
+| `GET /cards/{id}/receive-code?amount=` | korisnik | kod za QR na moju aktivnu karticu, opcionalno s predloženim iznosom |
+| `POST /recipients/resolve-code` | korisnik | skeniran kod → ime primaoca, maskirana kartica, valuta i iznos |
+
+- **Jedan primalac jednom.** Isti primalac ne može dvaput biti među omiljenim ("Primalac je već među omiljenim.").
+  Provjera je u servisu, a dva istovremena dodavanja zaustavlja unique indeks u bazi. Omiljeni može biti samo
+  korisnik kojem se može poslati novac (aktivan, potvrđen, s aktivnom karticom), i nikad sam korisnik.
+- **Poznato ograničenje (svjesna odluka):** omiljeni se dodaje po `recipientUserId`, pa prijavljen korisnik koji
+  redom proba ID-eve može saznati ime, prezime i korisničko ime aktivnih korisnika. Email i balans se nikad ne
+  vraćaju. Kao u aplikacijama za prenos novca s pretragom po korisničkom imenu, ime primaoca je vidljivo
+  prijavljenim korisnicima.
+- **Kod je potpisan, ne tajan.** Oblik je `torvin:v1:<podaci>.<potpis>`. Podaci (kartica, iznos, rok) su potpisani
+  HMAC-SHA256 ključem `RECEIVE_CODE_KEY` iz `.env`, pa izmijenjen ili tuđim ključem napravljen kod daje "QR kod nije
+  ispravan.". Kod važi 15 minuta ("QR kod je istekao. Zatražite novi od primaoca.").
+- Pri razrješavanju server ponovo provjeri karticu i primaoca, pa kod blokirane kartice ili blokiranog računa više
+  ne radi. Pošiljalac vidi samo zadnje 4 cifre kartice. Prenos zatim ide kao i svaki drugi, na `toUserId`: novac
+  ide na primaočevu karticu u valuti pošiljaoca.
+
 ## Notifikacije
 
 Notifikacije pravi Worker iz događaja koje objavi API, i upisuje ih u tabelu `Notifications` (nepročitane). Čitanje
