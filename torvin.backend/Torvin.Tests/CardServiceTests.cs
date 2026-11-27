@@ -7,6 +7,7 @@ using Torvin.Model.Enums;
 using Torvin.Model.Exceptions;
 using Torvin.Model.Messages;
 using Torvin.Model.Requests;
+using Torvin.Model.SearchObjects;
 using Torvin.Services.Database;
 using Torvin.Services.Database.Entities;
 using Torvin.Services.Security;
@@ -301,6 +302,61 @@ public partial class CardServiceTests
 
         Assert.Equal(CardStatusCodes.Blocked, blocked.CardStatusCode);
         Assert.Equal(CardService.BlockedByAdmin, exception.Message);
+        // Mobilna iz ovoga zna da Deblokiraj ne smije biti dostupno, u detaljima i u listi
+        Assert.True(blocked.IsBlockedByAdmin);
+        Assert.True((await fixture.Service.GetMineByIdAsync(card.Id)).IsBlockedByAdmin);
+        Assert.True((await fixture.Service.GetMineAsync(new CardSearchObject())).Items.Single().IsBlockedByAdmin);
+        fixture.ActAs(fixture.Admin, AppRoles.Admin);
+        Assert.True((await fixture.Service.GetAllAsync(new AdminCardSearchObject())).Items.Single().IsBlockedByAdmin);
+    }
+
+    [Fact]
+    public async Task BlockedByOwner_IsNotMarkedAsBlockedByAdmin()
+    {
+        var fixture = await NewFixtureAsync();
+        var card = await AddCardAsync(fixture, fixture.Owner, CardStatusCodes.Active);
+
+        var blocked = await fixture.Service.BlockAsync(card.Id);
+
+        Assert.False(blocked.IsBlockedByAdmin);
+        Assert.False((await fixture.Service.GetMineByIdAsync(card.Id)).IsBlockedByAdmin);
+        Assert.Equal(CardStatusCodes.Active, (await fixture.Service.UnblockAsync(card.Id)).CardStatusCode);
+    }
+
+    [Fact]
+    public async Task OwnerBlock_AfterAdminUnblocked_IsNotMarkedAsBlockedByAdmin()
+    {
+        var fixture = await NewFixtureAsync();
+        var card = await AddCardAsync(fixture, fixture.Owner, CardStatusCodes.Active);
+        fixture.ActAs(fixture.Admin, AppRoles.Admin);
+        await fixture.Service.ChangeStatusAsync(card.Id,
+            new CardStatusChangeRequest { CardStatusId = await StatusIdAsync(fixture, CardStatusCodes.Blocked), Reason = "Provjera." });
+        await fixture.Service.ChangeStatusAsync(card.Id,
+            new CardStatusChangeRequest { CardStatusId = await StatusIdAsync(fixture, CardStatusCodes.Active), Reason = "Provjereno." });
+        fixture.ActAs(fixture.Owner);
+
+        var blocked = await fixture.Service.BlockAsync(card.Id);
+
+        // Odlučuje posljednje blokiranje, a njega je napravio vlasnik
+        Assert.False(blocked.IsBlockedByAdmin);
+        Assert.Equal(CardStatusCodes.Active, (await fixture.Service.UnblockAsync(card.Id)).CardStatusCode);
+    }
+
+    [Fact]
+    public async Task Report_OfCardBlockedByAdmin_IsAllowed_AndNoLongerMarked()
+    {
+        var fixture = await NewFixtureAsync();
+        var card = await AddCardAsync(fixture, fixture.Owner, CardStatusCodes.Active);
+        fixture.ActAs(fixture.Admin, AppRoles.Admin);
+        await fixture.Service.ChangeStatusAsync(card.Id,
+            new CardStatusChangeRequest { CardStatusId = await StatusIdAsync(fixture, CardStatusCodes.Blocked), Reason = "Provjera." });
+        fixture.ActAs(fixture.Owner);
+
+        var reported = await fixture.Service.ReportAsync(card.Id, new CardReportRequest { Reason = CardReportReason.Lost });
+
+        // Oznaka važi samo dok je kartica blokirana, a prijava gubitka je dozvoljena i poslije blokade administratora
+        Assert.Equal(CardStatusCodes.Lost, reported.CardStatusCode);
+        Assert.False(reported.IsBlockedByAdmin);
     }
 
     [Fact]

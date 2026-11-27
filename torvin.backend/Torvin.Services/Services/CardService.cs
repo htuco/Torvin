@@ -73,21 +73,24 @@ public sealed class CardService(
     // Iz ovih statusa se ne izlazi, pa kartica u njima ne može ostati podrazumijevana za primanje novca
     private static readonly string[] FinalStatuses = [CardStatusCodes.Lost, CardStatusCodes.Stolen, CardStatusCodes.Closed];
 
-    public Task<PagedResult<CardResponse>> GetMineAsync(CardSearchObject search, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<CardResponse>> GetMineAsync(CardSearchObject search,
+        CancellationToken cancellationToken = default)
     {
         var userId = currentUser.UserId;
-        return Newest(Filter(context.Cards.AsNoTracking().Where(c => c.UserId == userId), search))
+        var page = await Newest(Filter(context.Cards.AsNoTracking().Where(c => c.UserId == userId), search))
             .ToPagedResultAsync<Card, CardResponse>(search, cancellationToken);
+        return page with { Items = await WithAdminBlockAsync(page.Items, cancellationToken) };
     }
 
     public async Task<CardResponse> GetMineByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var userId = currentUser.UserId;
-        return await context.Cards.AsNoTracking()
+        var card = await context.Cards.AsNoTracking()
             .Where(c => c.Id == id && c.UserId == userId)
             .ProjectToType<CardResponse>()
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(NotFound);
+        return (await WithAdminBlockAsync([card], cancellationToken))[0];
     }
 
     public async Task<CardResponse> CreateAsync(CardInsertRequest request, CancellationToken cancellationToken = default)
@@ -211,7 +214,8 @@ public sealed class CardService(
             description, note, cancellationToken);
     }
 
-    public Task<PagedResult<CardResponse>> GetAllAsync(AdminCardSearchObject search, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<CardResponse>> GetAllAsync(AdminCardSearchObject search,
+        CancellationToken cancellationToken = default)
     {
         var query = Filter(context.Cards.AsNoTracking(), search);
         if (search.UserId is not null)
@@ -226,7 +230,8 @@ public sealed class CardService(
                 || c.User.FirstName.Contains(fts) || c.User.LastName.Contains(fts) || c.User.Username.Contains(fts));
         }
 
-        return Newest(query).ToPagedResultAsync<Card, CardResponse>(search, cancellationToken);
+        var page = await Newest(query).ToPagedResultAsync<Card, CardResponse>(search, cancellationToken);
+        return page with { Items = await WithAdminBlockAsync(page.Items, cancellationToken) };
     }
 
     public async Task<CardResponse> ChangeStatusAsync(int id, CardStatusChangeRequest request,
@@ -342,27 +347,65 @@ public sealed class CardService(
             card.Id, oldCode, card.CardStatus.Code, currentUser.UserId);
     }
 
-    // Korisnik ne može sam poništiti blokadu koju je postavio administrator. Odlučuje posljednje blokiranje
+    // Korisnik ne može sam poništiti blokadu koju je postavio administrator
     private async Task EnsureNotBlockedByAdminAsync(int cardId, CancellationToken cancellationToken)
     {
-        var blockedByRole = await context.AuditLogs.AsNoTracking()
-            .Where(a => a.EntityType == nameof(Card) && a.EntityId == cardId && a.Action == AuditActions.CardBlocked)
-            .OrderByDescending(a => a.CreatedAt)
-            .ThenByDescending(a => a.Id)
-            .Select(a => a.ActorUser != null ? a.ActorUser.Role.Name : null)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (blockedByRole == AppRoles.Admin)
+        if ((await BlockedByAdminAsync([cardId], cancellationToken)).Contains(cardId))
         {
             throw new BusinessException(BlockedByAdmin);
         }
     }
 
+    // Ko je karticu blokirao zna samo audit trag, a odlučuje posljednje blokiranje svake kartice. Jedan upit
+    // vrati sva blokiranja traženih kartica (ima ih malo po kartici), a posljednje po kartici se bira u memoriji
+    private async Task<HashSet<int>> BlockedByAdminAsync(IReadOnlyCollection<int> cardIds,
+        CancellationToken cancellationToken)
+    {
+        var blocks = await context.AuditLogs.AsNoTracking()
+            .Where(a => a.EntityType == nameof(Card) && a.Action == AuditActions.CardBlocked
+                && cardIds.Contains(a.EntityId))
+            .Select(a => new
+            {
+                a.EntityId,
+                a.CreatedAt,
+                a.Id,
+                Role = a.ActorUser != null ? a.ActorUser.Role.Name : null,
+            })
+            .ToListAsync(cancellationToken);
+
+        return blocks
+            .GroupBy(b => b.EntityId)
+            .Where(g => g.OrderByDescending(b => b.CreatedAt).ThenByDescending(b => b.Id).First().Role
+                == AppRoles.Admin)
+            .Select(g => g.Key)
+            .ToHashSet();
+    }
+
+    // Oznaka blokade administratora za karticu i listu. Audit se čita samo za blokirane kartice, jednim upitom
+    // po stranici
+    private async Task<IReadOnlyList<CardResponse>> WithAdminBlockAsync(IReadOnlyList<CardResponse> cards,
+        CancellationToken cancellationToken)
+    {
+        var blockedIds = cards.Where(c => c.CardStatusCode == CardStatusCodes.Blocked).Select(c => c.Id)
+            .ToList();
+        if (blockedIds.Count == 0)
+        {
+            return cards;
+        }
+
+        var byAdmin = await BlockedByAdminAsync(blockedIds, cancellationToken);
+        return [.. cards.Select(c => byAdmin.Contains(c.Id) ? c with { IsBlockedByAdmin = true } : c)];
+    }
+
     private Task<CardStatus> StatusAsync(string code, CancellationToken cancellationToken) =>
         context.CardStatuses.SingleAsync(s => s.Code == code, cancellationToken);
 
-    private async Task<CardResponse> GetResponseAsync(int id, CancellationToken cancellationToken) =>
-        await context.Cards.AsNoTracking().Where(c => c.Id == id).ProjectToType<CardResponse>().SingleAsync(cancellationToken);
+    private async Task<CardResponse> GetResponseAsync(int id, CancellationToken cancellationToken)
+    {
+        var card = await context.Cards.AsNoTracking().Where(c => c.Id == id).ProjectToType<CardResponse>()
+            .SingleAsync(cancellationToken);
+        return (await WithAdminBlockAsync([card], cancellationToken))[0];
+    }
 
     private static IQueryable<Card> Filter(IQueryable<Card> query, CardSearchObject search)
     {
