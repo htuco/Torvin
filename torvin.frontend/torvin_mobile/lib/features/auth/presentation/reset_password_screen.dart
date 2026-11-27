@@ -50,7 +50,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
       notice: widget.step.notice,
       child: Form(
         key: formKey,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
