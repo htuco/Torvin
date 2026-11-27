@@ -25,8 +25,34 @@ class ApiClient {
 
   /// Vraća JSON tijelo odgovora, ili `null` kad ga nema (204).
   /// `authorized: false` je samo za anonimne rute prijave, koje ne šalju token.
-  Future<Map<String, dynamic>?> post(String path, {Object? body, bool authorized = true}) async {
-    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+  Future<Map<String, dynamic>?> post(String path, {Object? body, bool authorized = true}) => _send(
+        authorized: authorized,
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        request: (headers) =>
+            _httpClient.post(Uri.parse('${AppConfig.apiBaseUrl}$path'), headers: headers, body: jsonEncode(body)),
+      );
+
+  /// Čitanje s tokenom. Parametar s vrijednošću `null` se ne šalje, pa filter koji nije izabran ne ide u adresu.
+  Future<Map<String, dynamic>?> get(String path, {Map<String, Object?> query = const {}}) {
+    final parameters = {
+      for (final entry in query.entries)
+        if (entry.value != null) entry.key: entry.value.toString(),
+    };
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
+    return _send(
+      authorized: true,
+      headers: {'Accept': 'application/json'},
+      request: (headers) =>
+          _httpClient.get(parameters.isEmpty ? uri : uri.replace(queryParameters: parameters), headers: headers),
+    );
+  }
+
+  /// Zajedničko za svaku metodu: token, istek vremena, 401 → prijava i greška u obliku `ApiException`.
+  Future<Map<String, dynamic>?> _send({
+    required bool authorized,
+    required Map<String, String> headers,
+    required Future<http.Response> Function(Map<String, String> headers) request,
+  }) async {
     if (authorized) {
       final token = await _readToken();
       if (token != null) {
@@ -36,9 +62,7 @@ class ApiClient {
 
     final http.Response response;
     try {
-      response = await _httpClient
-          .post(Uri.parse('${AppConfig.apiBaseUrl}$path'), headers: headers, body: jsonEncode(body))
-          .timeout(timeout);
+      response = await request(headers).timeout(timeout);
     } on SocketException {
       throw const ApiException(statusCode: 0, message: unreachableMessage);
     } on http.ClientException {
