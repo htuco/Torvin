@@ -53,6 +53,45 @@ abstract final class Validators {
   static final RegExp _digit = RegExp(r'\p{Nd}', unicode: true);
   static final RegExp _special = RegExp(r'[^\p{L}\p{Nd}]', unicode: true);
 
+  static final RegExp _cardNumber = RegExp(r'^[0-9]{16}$');
+
+  static const String cardNumberMessage = 'Broj kartice nije ispravan. Unesite 16 cifara bez razmaka.';
+  static const String cardNetworkMessage = 'Podržane su samo Visa i Mastercard kartice.';
+
+  /// Isto kao `CardNumberAttribute` na backendu: 16 cifara, kontrolna cifra (Luhn) i mreža Visa ili Mastercard.
+  static String? cardNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    if (!_cardNumber.hasMatch(value) || !_isValidLuhn(value)) {
+      return cardNumberMessage;
+    }
+    return _isSupportedNetwork(value) ? null : cardNetworkMessage;
+  }
+
+  // Luhn: svaka druga cifra zdesna se udvostruči (od dvocifrenog rezultata se oduzme 9), a zbir mora biti djeljiv s 10
+  static bool _isValidLuhn(String number) {
+    var sum = 0;
+    for (var i = 0; i < number.length; i++) {
+      var digit = int.parse(number[number.length - 1 - i]);
+      if (i.isOdd) {
+        digit *= 2;
+        if (digit > 9) {
+          digit -= 9;
+        }
+      }
+      sum += digit;
+    }
+    return sum % 10 == 0;
+  }
+
+  // Visa počinje s 4, a Mastercard s 51–55 ili 2221–2720
+  static bool _isSupportedNetwork(String number) {
+    final firstTwo = int.parse(number.substring(0, 2));
+    final firstFour = int.parse(number.substring(0, 4));
+    return number.startsWith('4') || (firstTwo >= 51 && firstTwo <= 55) || (firstFour >= 2221 && firstFour <= 2720);
+  }
+
   /// `other` se čita pri validaciji, pa poređenje vidi trenutnu vrijednost drugog polja.
   static String? Function(String?) matches(String Function() other) =>
       (value) => value == other() ? null : passwordsMismatchMessage;

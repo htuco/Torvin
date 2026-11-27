@@ -42,7 +42,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> with ApiF
       notice: widget.step.notice,
       child: Form(
         key: formKey,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

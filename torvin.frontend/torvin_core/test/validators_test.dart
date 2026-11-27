@@ -93,4 +93,25 @@ void main() {
     expect(validator('abc'), isNull);
     expect(validator('abcd'), 'Najviše 3 znaka.');
   });
+
+  group('broj kartice', () {
+    test('Visa i Mastercard (obje serije) s ispravnom kontrolnom cifrom prolaze, a prazno je posao required', () {
+      expect(Validators.cardNumber('4111111111111111'), isNull);
+      expect(Validators.cardNumber('5555555555554444'), isNull);
+      expect(Validators.cardNumber('2223003122003222'), isNull);
+      expect(Validators.cardNumber(''), isNull);
+    });
+
+    test('pogrešna dužina, slova ili kontrolna cifra daju poruku o broju', () {
+      expect(Validators.cardNumber('411111111111111'), Validators.cardNumberMessage);
+      expect(Validators.cardNumber('41111111111111111'), Validators.cardNumberMessage);
+      expect(Validators.cardNumber('4111 1111 1111 1111'), Validators.cardNumberMessage);
+      expect(Validators.cardNumber('411111111111111a'), Validators.cardNumberMessage);
+      expect(Validators.cardNumber('4111111111111112'), Validators.cardNumberMessage);
+    });
+
+    test('ispravan broj druge mreže daje poruku o mreži', () {
+      expect(Validators.cardNumber('6011111111111117'), Validators.cardNetworkMessage);
+    });
+  });
 }

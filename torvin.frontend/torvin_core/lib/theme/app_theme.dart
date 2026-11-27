@@ -226,6 +226,34 @@ class AppTheme {
         selectedColor: scheme.onPrimaryContainer,
         selectedTileColor: scheme.primaryContainer,
       ),
+      // Filter čip: neizabran ima boju kartice i ivicu, a izabran je pun tamni, bez kvačice
+      chipTheme: ChipThemeData(
+        showCheckmark: false,
+        side: WidgetStateBorderSide.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? BorderSide.none : BorderSide(color: scheme.outline),
+        ),
+        shape: const StadiumBorder(),
+        color: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? scheme.inverseSurface : scheme.surfaceContainerLowest,
+        ),
+        labelStyle: WidgetStateTextStyle.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? textTheme.bodySmall!.copyWith(color: scheme.onInverseSurface, fontWeight: FontWeight.w600)
+              : textTheme.bodySmall!.copyWith(color: scheme.onSurface, fontWeight: FontWeight.w500),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.filterChipPadding),
+        labelPadding: EdgeInsets.zero,
+        pressElevation: 0,
+        elevation: 0,
+      ),
+      // DS nema toast, pa poruka uspjeha ili greške ide u snackbar istih boja kao tooltip
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: scheme.inverseSurface,
+        contentTextStyle: textTheme.bodyMedium?.copyWith(color: scheme.onInverseSurface, fontWeight: FontWeight.w500),
+        shape: controlShape,
+        elevation: 0,
+      ),
       dividerTheme: DividerThemeData(color: scheme.outline, thickness: AppConstants.borderWidthThin, space: 0),
       progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary),
       tooltipTheme: TooltipThemeData(

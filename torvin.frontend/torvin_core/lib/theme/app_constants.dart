@@ -1,3 +1,5 @@
+import 'package:flutter/painting.dart';
+
 /// Razmaci, zaobljenja, visine i sjene iz dizajn sistema v2.
 class AppConstants {
   AppConstants._();
@@ -70,4 +72,33 @@ class AppConstants {
 
   /// Najveća širina poruke praznog stanja.
   static const double emptyMessageWidth = 240;
+
+  /// Filter čip iznad liste.
+  static const double filterChipHeight = 36;
+  static const double filterChipPadding = 14;
+
+  /// Ikona u redu liste (historija transakcija): kvadrat 40 s ikonom 20.
+  static const double listIconBox = 40;
+  static const double listIconSize = 20;
+
+  /// Ikona pločice akcije u detaljima kartice.
+  static const double actionTileIconSize = 22;
+
+  /// Ikona dijaloga: kvadrat 48 s ikonom 22.
+  static const double dialogIconBox = 48;
+  static const double dialogIconSize = 22;
+  static const double dialogMaxWidth = 440;
+
+  /// DS v2: pozadina iza dijaloga se zatamni filterom svjetline, bez providnog sloja.
+  static const double dialogBackdropBrightness = 0.42;
+
+  /// DS v2: sjena dijaloga `0 8 24`, 10 % crne.
+  static const BoxShadow dialogShadow = BoxShadow(color: Color(0x1A000000), offset: Offset(0, 8), blurRadius: 24);
+
+  /// Stranica QR koda za primanje.
+  static const double qrSize = 220;
+
+  /// Malo dugme u zaglavlju ekrana ("Nova" na listi kartica): visina 40, padding 14.
+  static const double compactButtonHeight = 40;
+  static const double compactButtonPadding = 14;
 }

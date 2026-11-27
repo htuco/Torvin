@@ -22,4 +22,7 @@ public sealed record CardResponse(
     DateOnly ExpiresAt,
     decimal Balance,
     bool IsDefault,
-    DateTime CreatedAt) : IHasId;
+    DateTime CreatedAt,
+    // Blokirana kartica čiju blokadu je postavio administrator: vlasnik je ne može sam deblokirati.
+    // Ne dolazi iz kartice nego iz audit traga, pa ga servis popuni poslije projekcije
+    bool IsBlockedByAdmin = false) : IHasId;

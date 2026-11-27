@@ -45,7 +45,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
       subtitle: 'Unesite email računa i poslaćemo vam kod za novu lozinku.',
       child: Form(
         key: formKey,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

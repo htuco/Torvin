@@ -52,7 +52,6 @@ class _LoginFormState extends ConsumerState<LoginForm> with ApiFormState<LoginFo
 
     return Form(
       key: formKey,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

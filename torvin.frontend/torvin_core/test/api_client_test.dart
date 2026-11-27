@@ -102,6 +102,38 @@ void main() {
     expect(error.statusCode, 0);
     expect(error.message, ApiClient.unreachableMessage);
   });
+
+  test('GET šalje token, a parametri bez vrijednosti ne idu u adresu', () async {
+    final api = clientReturning(jsonResponse(200, {'items': [], 'totalCount': 0, 'page': 2, 'pageSize': 20}));
+
+    final json = await api.get('/cards', query: {'page': 2, 'pageSize': 20, 'cardStatusId': null});
+
+    expect(lastRequest.method, 'GET');
+    expect(lastRequest.headers['Authorization'], 'Bearer token-123');
+    expect(lastRequest.url.path, '/cards');
+    expect(lastRequest.url.queryParameters, {'page': '2', 'pageSize': '20'});
+    expect(json!['totalCount'], 0);
+  });
+
+  test('GET bez parametara nema upit u adresi', () async {
+    final api = clientReturning(jsonResponse(200, {'id': 7}));
+
+    await api.get('/cards/7');
+
+    expect(lastRequest.url.path, '/cards/7');
+    expect(lastRequest.url.hasQuery, isFalse);
+  });
+
+  test('401 na GET odjavljuje, a 404 prenosi poruku backenda bez odjave', () async {
+    await _capture(clientReturning(jsonResponse(401, {'message': 'Prijava je istekla.'})).get('/cards'));
+    expect(unauthorizedCalls, 1);
+
+    final notFound = clientReturning(jsonResponse(404, {'message': 'Kartica nije pronađena.'}));
+    final error = await _capture(notFound.get('/cards/9'));
+    expect(unauthorizedCalls, 0);
+    expect(error.statusCode, 404);
+    expect(error.message, 'Kartica nije pronađena.');
+  });
 }
 
 Future<ApiException> _capture(Future<Object?> call) async {

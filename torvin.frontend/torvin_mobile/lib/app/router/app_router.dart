@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:torvin_core/torvin_core.dart';
@@ -7,6 +8,11 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/presentation/verify_email_screen.dart';
+import '../../features/cards/presentation/activate_card_screen.dart';
+import '../../features/cards/presentation/add_card_screen.dart';
+import '../../features/cards/presentation/card_details_screen.dart';
+import '../../features/cards/presentation/cards_screen.dart';
+import '../../features/cards/presentation/receive_code_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import 'app_routes.dart';
 
@@ -35,6 +41,28 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => ResetPasswordScreen(step: state.extra as EmailStep? ?? const EmailStep()),
       ),
       GoRoute(path: AppRoutes.dashboard, builder: (_, _) => const DashboardScreen()),
+      GoRoute(
+        path: AppRoutes.cards,
+        builder: (_, _) => const CardsScreen(),
+        routes: [
+          // "new" je prije ":id", da se ne pročita kao ID kartice
+          GoRoute(path: 'new', builder: (_, _) => const AddCardScreen()),
+          GoRoute(
+            path: ':id',
+            builder: (context, state) => _withCardId(context, state, (id) => CardDetailsScreen(cardId: id)),
+            routes: [
+              GoRoute(
+                path: 'activate',
+                builder: (context, state) => _withCardId(context, state, (id) => ActivateCardScreen(cardId: id)),
+              ),
+              GoRoute(
+                path: 'receive',
+                builder: (context, state) => _withCardId(context, state, (id) => ReceiveCodeScreen(cardId: id)),
+              ),
+            ],
+          ),
+        ],
+      ),
     ],
     errorBuilder: (context, _) => NotFoundPage(onBack: () => context.go(AppRoutes.root)),
   );
@@ -44,3 +72,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+/// Ekran kartice iz rute `/cards/:id`. ID koji nije broj je nepostojeća stranica.
+Widget _withCardId(BuildContext context, GoRouterState state, Widget Function(int id) screen) {
+  final id = int.tryParse(state.pathParameters['id'] ?? '');
+  return id == null ? NotFoundPage(onBack: () => context.go(AppRoutes.root)) : screen(id);
+}

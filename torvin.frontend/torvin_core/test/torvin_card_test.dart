@@ -60,6 +60,34 @@ void main() {
     expect(card.bottomRightColor, TorvinColors.light.cardBlocked);
   });
 
+  testWidgets('mreža kartice daje logo paketa, a bez mreže logo ne postoji', (tester) async {
+    Future<CreditCardType?> typeFor(CardNetwork? network) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.lightTheme,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: TorvinCard(
+              last4Digits: '4821',
+              holderName: 'Amra Hodžić',
+              expiresAt: DateTime(2028, 5, 31),
+              color: TorvinColors.light.cardPrimary,
+              typeName: 'Debitna',
+              statusLabel: 'Aktivna',
+              statusTone: StatusTone.success,
+              balance: 1245,
+              network: network,
+            ),
+          ),
+        ),
+      ));
+      return tester.widget<CreditCardUi>(find.byType(CreditCardUi)).creditCardType;
+    }
+
+    expect(await typeFor(CardNetwork.visa), CreditCardType.visa);
+    expect(await typeFor(CardNetwork.mastercard), CreditCardType.mastercard);
+    expect(await typeFor(null), CreditCardType.none);
+  });
+
   test('maskirani broj ima 16 znakova i završava zadnjim ciframa', () {
     expect(TorvinCard.maskedNumber('4821'), '************4821');
   });

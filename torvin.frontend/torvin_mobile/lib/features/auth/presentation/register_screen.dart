@@ -54,7 +54,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with ApiFormSta
       subtitle: 'Poslije registracije potvrdite email kodom koji vam pošaljemo.',
       child: Form(
         key: formKey,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

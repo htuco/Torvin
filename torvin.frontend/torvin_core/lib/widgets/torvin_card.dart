@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:u_credit_card/u_credit_card.dart';
 
+import '../cards/card_response.dart';
 import '../formatting/date_formatter.dart';
 import '../formatting/money_formatter.dart';
 import '../theme/app_constants.dart';
@@ -25,6 +26,7 @@ class TorvinCard extends StatelessWidget {
     required this.balance,
     this.currency = MoneyFormatter.defaultCurrency,
     this.blocked = false,
+    this.network,
   });
 
   final String last4Digits;
@@ -43,6 +45,9 @@ class TorvinCard extends StatelessWidget {
 
   /// Blokirana kartica prelazi u sivoplavu boju s katancem (DS v2).
   final bool blocked;
+
+  /// Logo mreže (Visa, Mastercard) crta paket. Bez mreže kartica nema logo.
+  final CardNetwork? network;
 
   /// Paket prikaže prve 4 i zadnje 4 cifre, a ostalo maskira. Zvjezdice na mjestu prve četiri daju `**** **** **** 4821`.
   static String maskedNumber(String last4Digits) => '${'*' * 12}$last4Digits';
@@ -67,8 +72,11 @@ class TorvinCard extends StatelessWidget {
           // Paket bi napisao engleski "Credit"/"Debit" i balans kao "$1245.00", pa tip i balans idu ispod
           cardType: CardType.other,
           showBalance: false,
-          // Mreža (Visa, Mastercard) se još ne čuva
-          creditCardType: CreditCardType.none,
+          creditCardType: switch (network) {
+            CardNetwork.visa => CreditCardType.visa,
+            CardNetwork.mastercard => CreditCardType.mastercard,
+            null => CreditCardType.none,
+          },
           doesSupportNfc: false,
           showValidFrom: false,
           disableHapticFeedBack: true,

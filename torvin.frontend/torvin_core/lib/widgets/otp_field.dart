@@ -57,6 +57,8 @@ class _OtpFieldState extends State<OtpField> {
     return FormField<String>(
       initialValue: widget.controller.text,
       forceErrorText: widget.forceErrorText,
+      // Kao `TorvinTextField`: provjera poslije izmjene ovog polja, a ne drugih polja forme
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: validator == null ? null : (_) => validator(widget.controller.text),
       builder: (field) {
         final theme = Theme.of(context);

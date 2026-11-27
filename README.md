@@ -81,6 +81,12 @@ Mobilna ima prijavu, registraciju s potvrdom emaila (kod stiže u Mailpit, `http
 lozinku i reset. Novi kod za potvrdu stiže pri pokušaju prijave nepotvrđenim računom. Prijava radi samo za korisnike,
 a administrator dobija poruku da koristi desktop aplikaciju.
 
+Kartice se otvaraju s Početne ("Moje kartice"): lista s filterom po statusu, detalji s historijom kartice (filter
+poslano/primljeno), dodavanje (tip, valuta, broj, mjesec i godina isteka, pa kod iz emaila), blokiranje uz potvrdu,
+deblokiranje, prijava gubitka ili krađe i QR kod za primanje. Akcija koja za status kartice nije moguća je
+onemogućena, a ispod piše zašto. Za probu dodavanja radi testni broj `4111111111111111`. Polje forme javlja grešku
+tek kad ga korisnik promijeni, a sva polja se provjere pri slanju.
+
 ### Desktop aplikacija
 
 ```bash
@@ -215,6 +221,9 @@ Korisnik (mobilna) radi samo sa svojim karticama, a tuđa kartica vraća 404, is
 
   Iz `Lost`, `Stolen` i `Closed` nema povratka, a nedozvoljen prelaz vraća 400 s razlogom ("Kartica prijavljena
   kao ukradena ne može se ponovo aktivirati.").
+- Odgovor kartice ima `isBlockedByAdmin`: `true` kad je kartica blokirana, a posljednju blokadu je postavio
+  administrator. Vlasnik je tada ne može sam deblokirati, pa mobilna to dugme unaprijed onemogući. Oznaka se čita iz
+  audit traga jednim upitom po stranici, i to samo za blokirane kartice.
 - Svaka promjena statusa ostaje u audit tragu (ko, kad, stari i novi status, razlog) i šalje poruku u red
   `card-status`, iz koje Worker pravi notifikaciju vlasniku (vidi Notifikacije).
 

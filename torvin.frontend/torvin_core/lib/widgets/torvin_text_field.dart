@@ -7,7 +7,9 @@ import 'field_note.dart';
 /// Polje forme kao u dizajnu v2: labela iznad polja, placeholder u polju, a ispod objašnjenje formata ili greška
 /// s ikonom. Labela se ne smanjuje u ivicu polja kao kod Material `labelText`.
 ///
-/// Radi kao `TextFormField`: validator, `forceErrorText` (greška s backenda) i `autovalidateMode` iz `Form`.
+/// Radi kao `TextFormField`: validator i `forceErrorText` (greška s backenda). Polje se provjerava poslije svoje
+/// izmjene, a ne kad korisnik mijenja drugo polje, pa prazno polje koje još nije dirano ne javlja grešku. Sva polja
+/// se provjere pri slanju forme (`formKey.currentState!.validate()`).
 class TorvinTextField extends FormField<String> {
   TorvinTextField({
     super.key,
@@ -17,6 +19,7 @@ class TorvinTextField extends FormField<String> {
     String? helper,
     FormFieldValidator<String>? validator,
     super.forceErrorText,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
     ValueChanged<String>? onChanged,
     ValueChanged<String>? onFieldSubmitted,
     TextInputType? keyboardType,

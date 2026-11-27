@@ -24,9 +24,9 @@ void main() {
     ));
   }
 
-  /// Cifre u kućicama (Text), bez nevidljivog polja za unos (EditableText).
+  /// Cifre u kućicama (Text), bez nevidljivog polja za unos (EditableText) i bez reda greške ispod polja.
   Iterable<String> boxDigits(WidgetTester tester) => tester
-      .widgetList<Text>(find.descendant(of: find.byType(Row), matching: find.byType(Text)))
+      .widgetList<Text>(find.descendant(of: find.byType(Row).first, matching: find.byType(Text)))
       .map((t) => t.data!);
 
   testWidgets('prikazuje šest kućica i svaku cifru u svojoj kućici', (tester) async {
