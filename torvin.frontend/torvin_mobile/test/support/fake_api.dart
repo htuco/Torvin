@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -90,16 +91,43 @@ Map<String, dynamic> cardJson({
       'isBlockedByAdmin': blockedByAdmin,
     };
 
-Map<String, dynamic> transactionJson({String direction = 'Sent', double amount = 120}) => {
+Map<String, dynamic> transactionJson({String direction = 'Sent', double amount = 120, String? note}) => {
       'id': 1,
+      'referenceNumber': 'TRV-261120-0001',
       'direction': direction,
       'amount': amount,
       'currencyCode': 'BAM',
+      'transactionTypeCode': 'Transfer',
+      'transactionTypeName': 'Prenos',
       'transactionStatusCode': 'Completed',
       'transactionStatusName': 'Izvršena',
+      'transactionCategoryId': null,
+      'transactionCategoryName': null,
+      'note': note,
+      'myCardId': 7,
+      'myCardLast4Digits': '4821',
+      'counterpartyUserId': 5,
       'counterpartyFirstName': 'Marko',
       'counterpartyLastName': 'Petrović',
+      'counterpartyCardLast4Digits': '1234',
       'createdAt': '2026-11-20T09:15:00Z',
+    };
+
+Map<String, dynamic> recipientJson({int userId = 5, String firstName = 'Marko', String lastName = 'Petrović'}) => {
+      'userId': userId,
+      'firstName': firstName,
+      'lastName': lastName,
+      'username': '${firstName.toLowerCase()}.p',
+    };
+
+Map<String, dynamic> favoriteJson({int id = 3, int userId = 6, String? nickname = 'Cimerka'}) => {
+      'id': id,
+      'recipientUserId': userId,
+      'firstName': 'Selma',
+      'lastName': 'Hadžić',
+      'username': 'selma',
+      'nickname': nickname,
+      'createdAt': '2026-09-01T10:00:00Z',
     };
 
 const List<Map<String, dynamic>> cardStatusesJson = [
@@ -111,8 +139,14 @@ const List<Map<String, dynamic>> cardStatusesJson = [
   {'id': 6, 'code': 'Closed', 'name': 'Zatvorena'},
 ];
 
-/// Pokrene cijelu aplikaciju s prijavljenim korisnikom i otvori `location` kroz pravi router.
-Future<ProviderContainer> pumpAt(WidgetTester tester, FakeApi api, String location) async {
+/// Pokrene cijelu aplikaciju s prijavljenim korisnikom i otvori `location` kroz pravi router. `overrides` mijenja
+/// ono što se u testu ne može pokrenuti (npr. kamera).
+Future<ProviderContainer> pumpAt(
+  WidgetTester tester,
+  FakeApi api,
+  String location, {
+  List<Override> overrides = const [],
+}) async {
   final container = ProviderContainer(overrides: [
     sessionStorageProvider.overrideWithValue(FakeSessionStorage(AuthSession(
       token: 'token-123',
@@ -123,6 +157,7 @@ Future<ProviderContainer> pumpAt(WidgetTester tester, FakeApi api, String locati
     ))),
     themeModeStorageProvider.overrideWithValue(FakeThemeModeStorage()),
     httpClientProvider.overrideWithValue(api.client),
+    ...overrides,
   ]);
   addTearDown(container.dispose);
 
