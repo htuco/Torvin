@@ -11,6 +11,8 @@ void main() {
               if (request.url.queryParameters['direction'] != 'Received') transactionJson(),
             ])),
         'POST /cards/7/block': (_) => json(200, cardJson(status: 'Blocked', statusName: 'Blokirana')),
+        'GET /transactions/1': (_) => json(200, transactionJson()),
+        'GET /favorite-recipients': (_) => json(200, page([])),
       });
 
   /// Pločica je onemogućena kad njen `InkWell` nema `onTap`.
@@ -99,5 +101,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Razlog prijave je obavezan.'), findsOneWidget);
     expect(fake.sent('POST', '/cards/7/report'), isEmpty);
+  });
+
+  testWidgets('dodir na red historije otvara detalje transakcije', (tester) async {
+    await pumpAt(tester, api(cardJson()), '/cards/7');
+    await tester.scrollUntilVisible(find.text('Marko Petrović'), 200, scrollable: find.byType(Scrollable).first);
+
+    await tester.tap(find.text('Marko Petrović'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'Detalji transakcije'), findsOneWidget);
+    expect(find.text('TRV-261120-0001'), findsOneWidget);
   });
 }
