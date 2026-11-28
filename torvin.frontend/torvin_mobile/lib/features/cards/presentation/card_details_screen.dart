@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:torvin_core/torvin_core.dart';
 
 import '../../../app/router/app_routes.dart';
+import '../../../app/widgets/details_panel.dart';
 import '../../../app/widgets/filter_chips.dart';
 import '../../../app/widgets/paged_list_footer.dart';
 import '../../transactions/presentation/transaction_tile.dart';
@@ -200,7 +201,7 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _Panel(
+                      DetailsPanel(
                         children: [for (final transaction in page.items) TransactionTile(transaction: transaction)],
                       ),
                       PagedListFooter(
@@ -269,71 +270,21 @@ class _CardAttributes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    Widget row(IconData icon, String label, Widget value) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMD, vertical: AppConstants.spacingRow),
-          child: Row(
-            children: [
-              Icon(icon, size: AppConstants.iconSize, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(width: AppConstants.spacingSM),
-              Expanded(
-                child: Text(
-                  label,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                ),
-              ),
-              value,
-            ],
-          ),
-        );
-
-    Widget text(String value) => Text(value, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500));
-
-    return _Panel(
+    return DetailsPanel(
       children: [
-        if (card.name != null) row(LucideIcons.tag, 'Naziv', text(card.name!)),
-        row(LucideIcons.creditCard, 'Tip', text(card.cardTypeName)),
-        row(LucideIcons.banknote, 'Valuta', text(card.currencyCode)),
-        row(
-          LucideIcons.activity,
-          'Status',
-          StatusChip(label: card.cardStatusName, tone: CardAppearance.tone(card.cardStatusCode)),
+        if (card.name != null) DetailsRow.text(icon: LucideIcons.tag, label: 'Naziv', text: card.name!),
+        DetailsRow.text(icon: LucideIcons.creditCard, label: 'Tip', text: card.cardTypeName),
+        DetailsRow.text(icon: LucideIcons.banknote, label: 'Valuta', text: card.currencyCode),
+        DetailsRow(
+          icon: LucideIcons.activity,
+          label: 'Status',
+          value: StatusChip(label: card.cardStatusName, tone: CardAppearance.tone(card.cardStatusCode)),
         ),
-        row(LucideIcons.calendar, 'Važi do', text(DateFormatter.cardExpiry(card.expiresAt))),
-        row(LucideIcons.user, 'Vlasnik', text(card.holderName)),
-        row(LucideIcons.calendarPlus, 'Dodana', text(DateFormatter.date(card.createdAt))),
-        row(LucideIcons.star, 'Primarna za primanje', text(card.isDefault ? 'Da' : 'Ne')),
+        DetailsRow.text(icon: LucideIcons.calendar, label: 'Važi do', text: DateFormatter.cardExpiry(card.expiresAt)),
+        DetailsRow.text(icon: LucideIcons.user, label: 'Vlasnik', text: card.holderName),
+        DetailsRow.text(icon: LucideIcons.calendarPlus, label: 'Dodana', text: DateFormatter.date(card.createdAt)),
+        DetailsRow.text(icon: LucideIcons.star, label: 'Primarna za primanje', text: card.isDefault ? 'Da' : 'Ne'),
       ],
-    );
-  }
-}
-
-/// Bijeli panel s ivicom i razdjelnicima između redova.
-class _Panel extends StatelessWidget {
-  const _Panel({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppConstants.radiusCard),
-        border: Border.all(color: scheme.outline),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const Divider(),
-            children[i],
-          ],
-        ],
-      ),
     );
   }
 }

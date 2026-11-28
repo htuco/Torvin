@@ -38,6 +38,12 @@ class DashboardScreen extends ConsumerWidget {
               icon: const Icon(LucideIcons.creditCard),
               label: const Text('Moje kartice'),
             ),
+            const SizedBox(height: AppConstants.spacingRow),
+            FilledButton.icon(
+              onPressed: () => context.push(AppRoutes.newTransaction),
+              icon: const Icon(LucideIcons.send),
+              label: const Text('Pošalji novac'),
+            ),
           ],
         ),
       ),

@@ -14,6 +14,10 @@ import '../../features/cards/presentation/card_details_screen.dart';
 import '../../features/cards/presentation/cards_screen.dart';
 import '../../features/cards/presentation/receive_code_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/recipients/data/recipient_models.dart';
+import '../../features/recipients/presentation/scan_code_screen.dart';
+import '../../features/transactions/presentation/new_transaction_screen.dart';
+import '../../features/transactions/presentation/transaction_sent_screen.dart';
 import 'app_routes.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -63,6 +67,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+      GoRoute(
+        path: AppRoutes.newTransaction,
+        builder: (_, state) => NewTransactionScreen(recipient: state.extra as Recipient?),
+      ),
+      // Potvrda dobija poslanu transakciju od forme. Bez nje (npr. otvorena adresa) nema šta prikazati
+      GoRoute(
+        path: AppRoutes.transactionSent,
+        builder: (context, state) => switch (state.extra) {
+          final TransactionResponse transaction => TransactionSentScreen(transaction: transaction),
+          _ => NotFoundPage(onBack: () => context.go(AppRoutes.root)),
+        },
+      ),
+      GoRoute(path: AppRoutes.scanCode, builder: (_, _) => const ScanCodeScreen()),
     ],
     errorBuilder: (context, _) => NotFoundPage(onBack: () => context.go(AppRoutes.root)),
   );

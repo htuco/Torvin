@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:torvin_core/torvin_core.dart';
 
-/// Red filter čipova iznad liste (DS v2): tačno jedan je izabran, a red se skrola kad čipovi ne stanu.
+/// Red filter čipova (DS v2): izabran je čip čija je vrijednost `selected` (najviše jedan, a za brze sume iznosa
+/// nijedan kad iznos nije jedna od njih). Red se skrola kad čipovi ne stanu.
 class FilterChips<T> extends StatelessWidget {
   const FilterChips({
     super.key,

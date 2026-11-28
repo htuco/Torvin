@@ -12,12 +12,18 @@ enum CardReportReason {
 
 /// Kod koji mobilna prikaže kao QR. Poslije `expiresAt` treba tražiti novi.
 class ReceiveCode {
-  const ReceiveCode({required this.code, required this.expiresAt});
+  const ReceiveCode({required this.code, required this.amount, required this.expiresAt});
 
-  factory ReceiveCode.fromJson(Map<String, dynamic> json) =>
-      ReceiveCode(code: json['code'] as String, expiresAt: DateTime.parse(json['expiresAt'] as String).toUtc());
+  factory ReceiveCode.fromJson(Map<String, dynamic> json) => ReceiveCode(
+        code: json['code'] as String,
+        amount: (json['amount'] as num?)?.toDouble(),
+        expiresAt: DateTime.parse(json['expiresAt'] as String).toUtc(),
+      );
 
   final String code;
+
+  /// Iznos koji pošiljalac dobija popunjen, ako ga je primalac zadao.
+  final double? amount;
   final DateTime expiresAt;
 }
 
@@ -75,5 +81,9 @@ class CardsRepository {
   Future<CardResponse> report(int id, {required CardReportReason reason, String? note}) async =>
       CardResponse.fromJson((await _api.post('/cards/$id/report', body: {'reason': reason.apiName, 'note': note}))!);
 
-  Future<ReceiveCode> receiveCode(int id) async => ReceiveCode.fromJson((await _api.get('/cards/$id/receive-code'))!);
+  /// `amountCents` je opcioni iznos u kodu. API dobija decimalni broj (`50.0`), a bez iznosa se parametar ne šalje.
+  Future<ReceiveCode> receiveCode(int id, {int? amountCents}) async {
+    final amount = amountCents == null ? null : MoneyFormatter.fromCents(amountCents);
+    return ReceiveCode.fromJson((await _api.get('/cards/$id/receive-code', query: {'amount': amount}))!);
+  }
 }
