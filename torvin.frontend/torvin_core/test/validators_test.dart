@@ -114,4 +114,45 @@ void main() {
       expect(Validators.cardNumber('6011111111111117'), Validators.cardNetworkMessage);
     });
   });
+
+  group('napomena', () {
+    test('do 200 znakova prolazi, a duža dobija poruku s ograničenjem', () {
+      expect(Validators.note(''), isNull);
+      expect(Validators.note('a' * 200), isNull);
+      expect(Validators.note('a' * 201), 'Napomena može imati najviše 200 znakova.');
+    });
+  });
+
+  group('iznos', () {
+    test('ispravan oblik i granice prolaze, prazno je posao required', () {
+      expect(Validators.amount('0,01'), isNull);
+      expect(Validators.amount('1.245,00'), isNull);
+      expect(Validators.amount('1245'), isNull);
+      expect(Validators.amount('100.000,00'), isNull);
+      expect(Validators.amount(''), isNull);
+    });
+
+    test('nula, negativan, treća decimala i preko granice su van pravila', () {
+      expect(Validators.amount('0'), Validators.amountMessage);
+      expect(Validators.amount('0,00'), Validators.amountMessage);
+      expect(Validators.amount('-5'), Validators.amountMessage);
+      expect(Validators.amount('1,234'), Validators.amountMessage);
+      expect(Validators.amount('100.000,01'), Validators.amountMessage);
+    });
+
+    test('tačka kao decimalni znak, nula ispred hiljada i slova su pogrešan oblik', () {
+      expect(Validators.amount('12.50'), Validators.amountFormatMessage);
+      expect(Validators.amount('0.500'), Validators.amountFormatMessage);
+      expect(Validators.amount('1,2,3'), Validators.amountFormatMessage);
+      expect(Validators.amount('abc'), Validators.amountFormatMessage);
+    });
+
+    test('najviše do granice, a neispravan iznos ostavlja validatoru iznosa', () {
+      final atMost = Validators.amountAtMost(124500, Validators.insufficientFundsMessage('4821'));
+      expect(atMost('1.245,00'), isNull);
+      expect(atMost('1.245,01'), 'Nedovoljno sredstava na kartici •••• 4821.');
+      expect(atMost('abc'), isNull);
+      expect(atMost(''), isNull);
+    });
+  });
 }

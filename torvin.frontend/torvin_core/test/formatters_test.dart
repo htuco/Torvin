@@ -32,6 +32,28 @@ void main() {
     });
   });
 
+  group('unos iznosa', () {
+    test('naš oblik daje feninge', () {
+      expect(MoneyFormatter.parseCents('1.245,00'), 124500);
+      expect(MoneyFormatter.parseCents('1245'), 124500);
+      expect(MoneyFormatter.parseCents('1.245'), 124500);
+      expect(MoneyFormatter.parseCents('0,5'), 50);
+      expect(MoneyFormatter.parseCents(' 12,05 '), 1205);
+    });
+
+    test('minus, treća decimala, tačka za decimale i slova nisu iznos', () {
+      for (final text in ['12,345', '12.50', '-5', '1,2,3', '1.24,00', '0.500', 'abc', '']) {
+        expect(MoneyFormatter.parseCents(text), isNull, reason: text);
+      }
+    });
+
+    test('iznos za polje je bez valute i predznaka', () {
+      expect(MoneyFormatter.amountText(1245), '1.245,00');
+      expect(MoneyFormatter.amountText(50), '50,00');
+      expect(MoneyFormatter.amountText(0.07), '0,07');
+    });
+  });
+
   group('DateFormatter', () {
     final local = DateTime(2026, 5, 5, 14, 22);
 

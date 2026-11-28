@@ -82,5 +82,11 @@ class CardResponse {
   String get displayName => name ?? cardTypeName;
 
   /// `•••• 4821`, kako se kartica spominje u porukama.
-  String get maskedNumber => '•••• $last4Digits';
+  String get maskedNumber => mask(last4Digits);
+
+  /// Naziv i maskiran broj ("Glavna •••• 4821"), za izbor kartice i zaglavlja.
+  String get label => '$displayName $maskedNumber';
+
+  /// Maskiran broj iz zadnje 4 cifre ("•••• 4821"), i za karticu koja nije `CardResponse` (transakcija, QR).
+  static String mask(String last4Digits) => '•••• $last4Digits';
 }

@@ -1,3 +1,5 @@
+import '../formatting/money_formatter.dart';
+
 /// Validatori polja forme. Pravila i poruke su isti kao u `Torvin.Model/Requests`, da klijent i server
 /// govore istim riječima. Klijent provjerava samo format, a zauzetost (korisničko ime, email) javlja backend.
 abstract final class Validators {
@@ -91,6 +93,45 @@ abstract final class Validators {
     final firstFour = int.parse(number.substring(0, 4));
     return number.startsWith('4') || (firstTwo >= 51 && firstTwo <= 55) || (firstFour >= 2221 && firstFour <= 2720);
   }
+
+  /// Granice iznosa u feninzima, iste kao `Money.MinAmount` i `Money.MaxAmount` na backendu.
+  static const int amountMinCents = 1;
+  static const int amountMaxCents = 10000000;
+
+  static const String amountMessage = 'Iznos mora biti između 0,01 i 100.000,00, s najviše dvije decimale.';
+  static const String amountFormatMessage = 'Iznos upišite u obliku 1.245,00: tačka za hiljade, zarez za decimale.';
+
+  // Broj u našem obliku, i s minusom ili više decimala: takav je iznos van pravila, a ne pogrešno upisan
+  static final RegExp _amountShape = RegExp(r'^-?([1-9]\d{0,2}(\.\d{3})+|\d+)(,\d+)?$');
+
+  /// Isto pravilo kao `Money.IsValidAmount`: od 0,01 do 100.000,00, najviše dvije decimale, bez zaokruživanja.
+  static String? amount(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) {
+      return null;
+    }
+    if (!_amountShape.hasMatch(text)) {
+      return amountFormatMessage;
+    }
+
+    final cents = MoneyFormatter.parseCents(text);
+    return cents == null || cents < amountMinCents || cents > amountMaxCents ? amountMessage : null;
+  }
+
+  /// Iznos veći od `maxCents` (npr. balans kartice) dobija `message`. Prazan ili neispravan iznos je posao `amount`.
+  static String? Function(String?) amountAtMost(int maxCents, String message) => (value) {
+        final cents = MoneyFormatter.parseCents(value ?? '');
+        return cents != null && cents > maxCents ? message : null;
+      };
+
+  /// Napomena uz transakciju ili prijavu kartice, isto ograničenje kao u requestima na backendu.
+  static const int noteMaxLength = 200;
+  static const String noteMessage = 'Napomena može imati najviše $noteMaxLength znakova.';
+
+  static String? note(String? value) => maxLength(noteMaxLength, noteMessage)(value);
+
+  /// Isto kao `TransactionService.InsufficientFunds` na backendu.
+  static String insufficientFundsMessage(String last4) => 'Nedovoljno sredstava na kartici •••• $last4.';
 
   /// `other` se čita pri validaciji, pa poređenje vidi trenutnu vrijednost drugog polja.
   static String? Function(String?) matches(String Function() other) =>
