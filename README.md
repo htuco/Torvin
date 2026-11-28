@@ -87,6 +87,13 @@ deblokiranje, prijava gubitka ili krađe i QR kod za primanje. Akcija koja za st
 onemogućena, a ispod piše zašto. Za probu dodavanja radi testni broj `4111111111111111`. Polje forme javlja grešku
 tek kad ga korisnik promijeni, a sva polja se provjere pri slanju.
 
+Novac se šalje s Početne ("Pošalji novac"): kartica (samo aktivne, uz dostupan balans), iznos (`1.245,00`: tačka za
+hiljade, zarez za decimale, uz brze sume 20/50/100/200), primalac i napomena. Primalac se bira iz reda omiljenih,
+pretragom (od 3 znaka) ili skeniranjem QR koda, koji popuni primaoca i iznos iz koda. Prije slanja dijalog pokazuje
+sažetak, a poslije slanja ekran potvrde pokazuje iznos, primaoca i broj reference. Bez aktivne kartice forma se ne
+otvara. QR za primanje (detalji kartice) može nositi iznos. Skeniranje traži dozvolu kamere, a bez nje ekran
+objašnjava kako je dati.
+
 ### Desktop aplikacija
 
 ```bash

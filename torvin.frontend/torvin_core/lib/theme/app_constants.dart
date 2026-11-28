@@ -101,4 +101,9 @@ class AppConstants {
   /// Malo dugme u zaglavlju ekrana ("Nova" na listi kartica): visina 40, padding 14.
   static const double compactButtonHeight = 40;
   static const double compactButtonPadding = 14;
+
+  /// Omiljeni primalac u redu iznad pretrage (1k): pločica 56 s avatarom 48 i imenom 6 ispod.
+  static const double favoriteTileWidth = 56;
+  static const double favoriteAvatarSize = 48;
+  static const double favoriteNameGap = 6;
 }

@@ -25,8 +25,6 @@ class _ReportCardDialog extends StatefulWidget {
 }
 
 class _ReportCardDialogState extends State<_ReportCardDialog> {
-  static const int _noteMaxLength = 200;
-
   final _formKey = GlobalKey<FormState>();
   final _note = TextEditingController();
   CardReportReason? _reason;
@@ -102,7 +100,7 @@ class _ReportCardDialogState extends State<_ReportCardDialog> {
               label: 'Napomena (opciono)',
               hint: 'npr. Izgubljena u tramvaju',
               textCapitalization: TextCapitalization.sentences,
-              validator: Validators.maxLength(_noteMaxLength, 'Napomena može imati najviše $_noteMaxLength znakova.'),
+              validator: Validators.note,
             ),
           ],
         ),

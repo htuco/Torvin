@@ -40,6 +40,8 @@ void main() {
     expect(card.holderName, 'Amra Hodžić');
     expect(card.displayName, 'Glavna');
     expect(card.maskedNumber, '•••• 4821');
+    expect(card.label, 'Glavna •••• 4821');
+    expect(CardResponse.mask('1234'), '•••• 1234');
     expect(card.createdAt.isUtc, isTrue);
     expect(card.isBlockedByAdmin, isFalse);
     expect(CardResponse.fromJson(cardJson(status: 'Blocked', blockedByAdmin: true)).isBlockedByAdmin, isTrue);
@@ -54,13 +56,23 @@ void main() {
   test('transakcija: poslano je odliv, primljeno priliv', () {
     Map<String, dynamic> json(String direction, String status) => {
           'id': 1,
+          'referenceNumber': 'TRV-261120-0001',
           'direction': direction,
           'amount': 120,
           'currencyCode': 'BAM',
+          'transactionTypeCode': 'Transfer',
+          'transactionTypeName': 'Prenos',
           'transactionStatusCode': status,
           'transactionStatusName': status == 'Completed' ? 'Izvršena' : 'Poništena',
+          'transactionCategoryId': null,
+          'transactionCategoryName': null,
+          'note': null,
+          'myCardId': 7,
+          'myCardLast4Digits': '4821',
+          'counterpartyUserId': 5,
           'counterpartyFirstName': 'Marko',
           'counterpartyLastName': 'Petrović',
+          'counterpartyCardLast4Digits': null,
           'createdAt': '2026-11-20T09:15:00Z',
         };
 
@@ -72,6 +84,12 @@ void main() {
     expect(received.signedAmount, 120);
     expect(received.isCompleted, isFalse);
     expect(received.counterpartyName, 'Marko Petrović');
+    expect(sent.referenceNumber, 'TRV-261120-0001');
+    expect(sent.myCardLast4Digits, '4821');
+    expect(sent.counterpartyUserId, 5);
+    expect(sent.note, isNull);
+    expect(sent.transactionCategoryName, isNull);
+    expect(sent.counterpartyCardLast4Digits, isNull);
   });
 
   test('stranica zna ima li još redova', () {

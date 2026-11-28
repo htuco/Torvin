@@ -9,6 +9,9 @@ abstract final class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String cards = '/cards';
   static const String newCard = '/cards/new';
+  static const String newTransaction = '/transactions/new';
+  static const String transactionSent = '/transactions/sent';
+  static const String scanCode = '/scan';
 
   static String cardDetails(int id) => '/cards/$id';
   static String activateCard(int id) => '/cards/$id/activate';
