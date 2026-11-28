@@ -51,6 +51,7 @@ void main() {
       expect(MoneyFormatter.amountText(1245), '1.245,00');
       expect(MoneyFormatter.amountText(50), '50,00');
       expect(MoneyFormatter.amountText(0.07), '0,07');
+      expect(MoneyFormatter.centsText(124550), '1.245,50');
     });
   });
 
@@ -72,5 +73,23 @@ void main() {
     test('rok važenja kartice je mjesec/godina', () {
       expect(DateFormatter.cardExpiry(DateTime(2028, 5, 31)), '05/28');
     });
+
+    test('zaglavlje dana: danas, jučer (i preko granice mjeseca) ili datum', () {
+      final now = DateTime(2026, 6, 1, 9, 0);
+      expect(DateFormatter.dayHeader(DateTime(2026, 6, 1, 0, 5), now: now), 'Danas · 01.06.2026');
+      expect(DateFormatter.dayHeader(DateTime(2026, 5, 31, 23, 50), now: now), 'Jučer · 31.05.2026');
+      expect(DateFormatter.dayHeader(DateTime(2026, 5, 30, 12, 0), now: now), '30.05.2026');
+    });
+
+    test('datum za API je kalendarski dan', () {
+      expect(DateFormatter.isoDate(DateTime(2026, 5, 5)), '2026-05-05');
+    });
+  });
+
+  test('status transakcije: izvršena uspjeh, neuspjela greška, poništena neutralna', () {
+    expect(TransactionAppearance.tone(TransactionStatusCodes.completed), StatusTone.success);
+    expect(TransactionAppearance.tone(TransactionStatusCodes.failed), StatusTone.error);
+    expect(TransactionAppearance.tone(TransactionStatusCodes.reversed), StatusTone.neutral);
+    expect(TransactionAppearance.tone('Nepoznat'), StatusTone.neutral);
   });
 }

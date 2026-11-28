@@ -134,6 +134,30 @@ void main() {
     expect(error.statusCode, 404);
     expect(error.message, 'Kartica nije pronađena.');
   });
+
+  test('PUT šalje tijelo i token, a DELETE s 204 vraća null', () async {
+    final api = clientReturning(jsonResponse(200, {'id': 3, 'nickname': 'Cimerka'}));
+    expect(await api.put('/favorite-recipients/3', body: {'nickname': 'Cimerka'}), {'id': 3, 'nickname': 'Cimerka'});
+    expect(lastRequest.method, 'PUT');
+    expect(lastRequest.headers['Authorization'], 'Bearer token-123');
+    expect(jsonDecode(lastRequest.body), {'nickname': 'Cimerka'});
+
+    expect(await clientReturning(http.Response('', 204)).delete('/favorite-recipients/3'), isNull);
+    expect(lastRequest.method, 'DELETE');
+    expect(lastRequest.headers['Authorization'], 'Bearer token-123');
+  });
+
+  test('401 na PUT i DELETE odjavljuje, a 404 prenosi poruku backenda', () async {
+    final expired = clientReturning(jsonResponse(401, {'message': 'Prijava je istekla.'}));
+    await _capture(expired.put('/favorite-recipients/3'));
+    await _capture(expired.delete('/favorite-recipients/3'));
+    expect(unauthorizedCalls, 2);
+
+    final notFound = clientReturning(jsonResponse(404, {'message': 'Omiljeni primalac nije pronađen.'}));
+    final error = await _capture(notFound.delete('/favorite-recipients/9'));
+    expect(unauthorizedCalls, 0);
+    expect(error.message, 'Omiljeni primalac nije pronađen.');
+  });
 }
 
 Future<ApiException> _capture(Future<Object?> call) async {

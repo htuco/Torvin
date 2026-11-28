@@ -27,6 +27,7 @@ export 'theme/app_theme.dart';
 export 'theme/theme_mode_controller.dart';
 export 'theme/theme_mode_storage.dart';
 export 'theme/torvin_colors.dart';
+export 'transactions/transaction_appearance.dart';
 export 'transactions/transaction_response.dart';
 export 'transactions/transaction_status_codes.dart';
 export 'validation/validators.dart';

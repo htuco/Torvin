@@ -9,8 +9,6 @@ import 'reference_models.dart';
 class ReferenceRepository {
   const ReferenceRepository(this._api);
 
-  static const int _allItems = 100;
-
   final ApiClient _api;
 
   Future<List<CardTypeResponse>> cardTypes() => _all('/card-types', CardTypeResponse.fromJson);
@@ -20,7 +18,7 @@ class ReferenceRepository {
   Future<List<CurrencyResponse>> currencies() => _all('/currencies', CurrencyResponse.fromJson);
 
   Future<List<T>> _all<T>(String path, T Function(Map<String, dynamic> json) fromJson) async {
-    final json = await _api.get(path, query: {'pageSize': _allItems});
+    final json = await _api.get(path, query: {'pageSize': PagedResult.maxPageSize});
     return PagedResult.fromJson(json!, fromJson).items;
   }
 }
