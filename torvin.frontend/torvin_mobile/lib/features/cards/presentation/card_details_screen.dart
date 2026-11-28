@@ -6,6 +6,7 @@ import 'package:torvin_core/torvin_core.dart';
 import '../../../app/router/app_routes.dart';
 import '../../../app/widgets/details_panel.dart';
 import '../../../app/widgets/filter_chips.dart';
+import '../../../app/widgets/load_more_listener.dart';
 import '../../../app/widgets/paged_list_footer.dart';
 import '../../transactions/presentation/transaction_tile.dart';
 import '../data/card_providers.dart';
@@ -118,13 +119,8 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
           )
         : _ActionTile(icon: LucideIcons.lock, label: 'Blokiraj', onTap: when(CardAction.block, () => _block(card)));
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification.metrics.extentAfter < PagedListFooter.loadMoreThreshold) {
-          ref.read(cardTransactionsProvider(_history).notifier).loadMore();
-        }
-        return false;
-      },
+    return LoadMoreListener(
+      onLoadMore: () => ref.read(cardTransactionsProvider(_history).notifier).loadMore(),
       child: ListView(
         padding: const EdgeInsets.all(AppConstants.spacingLG),
         children: [
@@ -202,7 +198,13 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       DetailsPanel(
-                        children: [for (final transaction in page.items) TransactionTile(transaction: transaction)],
+                        children: [
+                          for (final transaction in page.items)
+                            TransactionTile(
+                              transaction: transaction,
+                              onTap: () => context.push(AppRoutes.transactionDetails(transaction.id)),
+                            ),
+                        ],
                       ),
                       PagedListFooter(
                         page: page,

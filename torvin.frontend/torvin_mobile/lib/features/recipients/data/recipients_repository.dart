@@ -29,4 +29,17 @@ class RecipientsRepository {
     final json = await _api.get('/favorite-recipients', query: {'page': page, 'pageSize': pageSize, 'fts': fts});
     return PagedResult.fromJson(json!, FavoriteRecipientResponse.fromJson);
   }
+
+  /// Duplikat daje "Primalac je već među omiljenim.", a korisnik koji ne može primati novac "Primalac nije
+  /// pronađen."
+  Future<FavoriteRecipientResponse> addFavorite(int recipientUserId) async => FavoriteRecipientResponse.fromJson(
+        (await _api.post('/favorite-recipients', body: {'recipientUserId': recipientUserId}))!,
+      );
+
+  /// Prazan nadimak (`null`) briše nadimak.
+  Future<FavoriteRecipientResponse> updateFavorite(int id, {required String? nickname}) async =>
+      FavoriteRecipientResponse.fromJson((await _api.put('/favorite-recipients/$id', body: {'nickname': nickname}))!);
+
+  /// Meko brisanje na serveru. Isti primalac se kasnije može ponovo dodati.
+  Future<void> deleteFavorite(int id) => _api.delete('/favorite-recipients/$id');
 }

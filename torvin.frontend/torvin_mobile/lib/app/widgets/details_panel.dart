@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:torvin_core/torvin_core.dart';
 
-/// Bijeli panel s ivicom i razdjelnicima između redova.
+/// Bijeli panel s ivicom i razdjelnicima između redova. Boja je na `Material`, pa se vidi talas dodira na redu.
 class DetailsPanel extends StatelessWidget {
   const DetailsPanel({super.key, required this.children});
 
@@ -10,11 +10,11 @@ class DetailsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLowest,
+    return Material(
+      color: scheme.surfaceContainerLowest,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusCard),
-        border: Border.all(color: scheme.outline),
+        side: BorderSide(color: scheme.outline),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(

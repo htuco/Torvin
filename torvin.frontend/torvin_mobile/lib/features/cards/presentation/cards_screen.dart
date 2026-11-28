@@ -5,6 +5,7 @@ import 'package:torvin_core/torvin_core.dart';
 
 import '../../../app/router/app_routes.dart';
 import '../../../app/widgets/filter_chips.dart';
+import '../../../app/widgets/load_more_listener.dart';
 import '../../../app/widgets/paged_list_footer.dart';
 import '../data/card_providers.dart';
 import 'virtual_card_view.dart';
@@ -88,13 +89,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   Widget _list(PagedList<CardResponse> page) {
     final theme = Theme.of(context);
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification.metrics.extentAfter < PagedListFooter.loadMoreThreshold) {
-          ref.read(cardListProvider(_statusId).notifier).loadMore();
-        }
-        return false;
-      },
+    return LoadMoreListener(
+      onLoadMore: () => ref.read(cardListProvider(_statusId).notifier).loadMore(),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(AppConstants.spacingLG, 0, AppConstants.spacingLG, AppConstants.spacingLG),
         children: [
@@ -166,12 +162,28 @@ class _StatusFilter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statuses = ref.watch(cardStatusesProvider).value ?? const <CardStatusResponse>[];
-    return FilterChips<int?>(
-      options: [('Sve', null), for (final status in statuses) (status.name, status.id)],
+    final statuses = ref.watch(cardStatusesProvider);
+    final loaded = statuses.value ?? const <CardStatusResponse>[];
+    final chips = FilterChips<int?>(
+      options: [('Sve', null), for (final status in loaded) (status.name, status.id)],
       selected: selected,
       onSelected: onSelected,
       padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingLG),
+    );
+    if (!statuses.hasError) {
+      return chips;
+    }
+
+    // Bez statusa filter nudi samo "Sve", pa ekran kaže zašto
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        chips,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppConstants.spacingLG, AppConstants.spacingSM, AppConstants.spacingLG, 0),
+          child: InfoNote('Statusi za filter se nisu učitali. ${ApiException.messageOf(statuses.error!)}'),
+        ),
+      ],
     );
   }
 }

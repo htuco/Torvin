@@ -15,9 +15,12 @@ import '../../features/cards/presentation/cards_screen.dart';
 import '../../features/cards/presentation/receive_code_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/recipients/data/recipient_models.dart';
+import '../../features/recipients/presentation/favorites_screen.dart';
 import '../../features/recipients/presentation/scan_code_screen.dart';
 import '../../features/transactions/presentation/new_transaction_screen.dart';
+import '../../features/transactions/presentation/transaction_details_screen.dart';
 import '../../features/transactions/presentation/transaction_sent_screen.dart';
+import '../../features/transactions/presentation/transactions_screen.dart';
 import 'app_routes.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -53,20 +56,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: 'new', builder: (_, _) => const AddCardScreen()),
           GoRoute(
             path: ':id',
-            builder: (context, state) => _withCardId(context, state, (id) => CardDetailsScreen(cardId: id)),
+            builder: (context, state) => _withId(context, state, (id) => CardDetailsScreen(cardId: id)),
             routes: [
               GoRoute(
                 path: 'activate',
-                builder: (context, state) => _withCardId(context, state, (id) => ActivateCardScreen(cardId: id)),
+                builder: (context, state) => _withId(context, state, (id) => ActivateCardScreen(cardId: id)),
               ),
               GoRoute(
                 path: 'receive',
-                builder: (context, state) => _withCardId(context, state, (id) => ReceiveCodeScreen(cardId: id)),
+                builder: (context, state) => _withId(context, state, (id) => ReceiveCodeScreen(cardId: id)),
               ),
             ],
           ),
         ],
       ),
+      GoRoute(path: AppRoutes.transactions, builder: (_, _) => const TransactionsScreen()),
       GoRoute(
         path: AppRoutes.newTransaction,
         builder: (_, state) => NewTransactionScreen(recipient: state.extra as Recipient?),
@@ -79,7 +83,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           _ => NotFoundPage(onBack: () => context.go(AppRoutes.root)),
         },
       ),
+      // Poslije "new" i "sent", da se ne pročitaju kao ID transakcije
+      GoRoute(
+        path: '${AppRoutes.transactions}/:id',
+        builder: (context, state) => _withId(context, state, (id) => TransactionDetailsScreen(transactionId: id)),
+      ),
       GoRoute(path: AppRoutes.scanCode, builder: (_, _) => const ScanCodeScreen()),
+      GoRoute(path: AppRoutes.favorites, builder: (_, _) => const FavoritesScreen()),
     ],
     errorBuilder: (context, _) => NotFoundPage(onBack: () => context.go(AppRoutes.root)),
   );
@@ -90,8 +100,8 @@ final routerProvider = Provider<GoRouter>((ref) {
   return router;
 });
 
-/// Ekran kartice iz rute `/cards/:id`. ID koji nije broj je nepostojeća stranica.
-Widget _withCardId(BuildContext context, GoRouterState state, Widget Function(int id) screen) {
+/// Ekran zapisa iz rute s `:id` (kartica, transakcija). ID koji nije broj je nepostojeća stranica.
+Widget _withId(BuildContext context, GoRouterState state, Widget Function(int id) screen) {
   final id = int.tryParse(state.pathParameters['id'] ?? '');
   return id == null ? NotFoundPage(onBack: () => context.go(AppRoutes.root)) : screen(id);
 }
