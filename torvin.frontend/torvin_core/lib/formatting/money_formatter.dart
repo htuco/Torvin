@@ -25,6 +25,9 @@ class MoneyFormatter {
   /// Iznos za polje forme (`1.245,00`), bez valute i predznaka.
   static String amountText(num amount) => _digits(roundToCents(amount).abs());
 
+  /// Isto kao `amountText`, za iznos koji je već u feninzima (filteri, brze sume).
+  static String centsText(int cents) => _digits(cents.abs());
+
   // Tačka za hiljade u grupama od tri, pa opciono zarez i jedna ili dvije decimale (1245, 1.245, 1.245,00, 0,5).
   // Prva grupa ne počinje nulom, jer bi se "0.500" inače tiho pročitalo kao 500,00
   static final RegExp _grouped = RegExp(r'^[1-9]\d{0,2}(\.\d{3})+(,\d{1,2})?$');

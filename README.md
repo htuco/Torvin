@@ -94,6 +94,13 @@ sažetak, a poslije slanja ekran potvrde pokazuje iznos, primaoca i broj referen
 otvara. QR za primanje (detalji kartice) može nositi iznos. Skeniranje traži dozvolu kamere, a bez nje ekran
 objašnjava kako je dati.
 
+Historija ("Transakcije" na Početnoj) ima pretragu (ime, napomena, referenca), smjer, period, karticu i iznos od–do,
+grupisana je po danu i učitava sljedeću stranicu pri skrolanju. Dodir na transakciju (i u historiji kartice) otvara
+detalje: datum, tip, smjer, kartice (zadnje 4 cifre), napomenu, kategoriju i referencu, uz "Dodaj u omiljene".
+"Omiljeni primaoci" imaju pretragu, izmjenu nadimka, uklanjanje uz potvrdu i slanje novca jednim dodirom. Materialovi
+tekstovi (izbor datuma, Nazad) su na bosanskom. Poznato ograničenje: filter perioda server računa po UTC danima, pa
+transakcija iz prvog sata poslije ponoći po našem vremenu pada u prethodni dan.
+
 ### Desktop aplikacija
 
 ```bash

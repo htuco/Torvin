@@ -9,6 +9,7 @@ import '../../../app/widgets/filter_chips.dart';
 import '../../cards/data/card_providers.dart';
 import '../../recipients/data/recipient_models.dart';
 import '../../recipients/data/recipient_providers.dart';
+import '../data/transaction_providers.dart';
 import 'confirm_transaction_dialog.dart';
 import 'recipient_picker.dart';
 
@@ -22,9 +23,10 @@ class NewTransactionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Kartice i omiljeni se traže paralelno. Omiljeni nisu preduslov, pa njihova greška ne ruši formu
+    // Kartice i omiljeni se traže paralelno. Omiljeni nisu preduslov, pa njihova greška ne ruši formu, nego stoji
+    // iznad pretrage
     final cards = ref.watch(activeCardsProvider);
-    final favorites = ref.watch(favoriteListProvider('')).value?.items ?? const [];
+    final favorites = ref.watch(favoritesRowProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Nova transakcija')),
@@ -41,7 +43,12 @@ class NewTransactionScreen extends ConsumerWidget {
             actionLabel: 'Dodaj virtuelnu karticu',
             onAction: () => context.push(AppRoutes.newCard),
           ),
-        AsyncData(:final value) => _NewTransactionForm(cards: value, favorites: favorites, recipient: recipient),
+        AsyncData(:final value) => _NewTransactionForm(
+            cards: value,
+            favorites: favorites.value ?? const [],
+            favoritesError: favorites.hasError ? ApiException.messageOf(favorites.error!) : null,
+            recipient: recipient,
+          ),
         _ => const Center(child: CircularProgressIndicator()),
       },
     );
@@ -49,10 +56,16 @@ class NewTransactionScreen extends ConsumerWidget {
 }
 
 class _NewTransactionForm extends ConsumerStatefulWidget {
-  const _NewTransactionForm({required this.cards, required this.favorites, required this.recipient});
+  const _NewTransactionForm({
+    required this.cards,
+    required this.favorites,
+    required this.favoritesError,
+    required this.recipient,
+  });
 
   final List<CardResponse> cards;
   final List<FavoriteRecipientResponse> favorites;
+  final String? favoritesError;
   final Recipient? recipient;
 
   @override
@@ -170,8 +183,8 @@ class _NewTransactionFormState extends ConsumerState<_NewTransactionForm> with A
       if (!mounted) {
         return;
       }
-      // Balans kartice i njena historija su se promijenili
-      refreshCards(ref, cardId: card.id);
+      // Balans kartice, njena historija i moja historija su se promijenili
+      refreshTransactions(ref, cardId: card.id);
       context.pushReplacement(AppRoutes.transactionSent, extra: transaction);
     });
   }
@@ -232,7 +245,7 @@ class _NewTransactionFormState extends ConsumerState<_NewTransactionForm> with A
               options: [for (final amount in _quickAmounts) ('$amount', amount * MoneyFormatter.centsPerUnit)],
               selected: MoneyFormatter.parseCents(_amount.text),
               onSelected: (cents) {
-                _amount.text = MoneyFormatter.amountText(MoneyFormatter.fromCents(cents!));
+                _amount.text = MoneyFormatter.centsText(cents!);
                 clearServerError('amount');
                 setState(() {});
               },
@@ -241,6 +254,7 @@ class _NewTransactionFormState extends ConsumerState<_NewTransactionForm> with A
             RecipientPicker(
               selected: recipient,
               favorites: widget.favorites,
+              favoritesError: widget.favoritesError,
               scanning: _scanning,
               error: serverError('toUserId') ?? _codeError,
               onEdited: _clearRecipientError,

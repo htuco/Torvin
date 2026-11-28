@@ -32,6 +32,21 @@ class ApiClient {
             _httpClient.post(Uri.parse('${AppConfig.apiBaseUrl}$path'), headers: headers, body: jsonEncode(body)),
       );
 
+  /// Izmjena postojećeg zapisa, uvijek s tokenom.
+  Future<Map<String, dynamic>?> put(String path, {Object? body}) => _send(
+        authorized: true,
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        request: (headers) =>
+            _httpClient.put(Uri.parse('${AppConfig.apiBaseUrl}$path'), headers: headers, body: jsonEncode(body)),
+      );
+
+  /// Brisanje, uvijek s tokenom. Uspjeh je obično 204 bez tijela, pa vraća `null`.
+  Future<Map<String, dynamic>?> delete(String path) => _send(
+        authorized: true,
+        headers: {'Accept': 'application/json'},
+        request: (headers) => _httpClient.delete(Uri.parse('${AppConfig.apiBaseUrl}$path'), headers: headers),
+      );
+
   /// Čitanje s tokenom. Parametar s vrijednošću `null` se ne šalje, pa filter koji nije izabran ne ide u adresu.
   Future<Map<String, dynamic>?> get(String path, {Map<String, Object?> query = const {}}) {
     final parameters = {

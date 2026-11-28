@@ -9,13 +9,16 @@ abstract final class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String cards = '/cards';
   static const String newCard = '/cards/new';
+  static const String transactions = '/transactions';
   static const String newTransaction = '/transactions/new';
   static const String transactionSent = '/transactions/sent';
   static const String scanCode = '/scan';
+  static const String favorites = '/favorites';
 
   static String cardDetails(int id) => '/cards/$id';
   static String activateCard(int id) => '/cards/$id/activate';
   static String receiveCode(int id) => '/cards/$id/receive';
+  static String transactionDetails(int id) => '/transactions/$id';
 
   /// Rute dostupne bez prijave: cijeli tok prijave, registracije i reseta lozinke.
   static const Set<String> publicRoutes = {login, register, verifyEmail, forgotPassword, resetPassword};

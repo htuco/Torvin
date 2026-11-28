@@ -115,6 +115,23 @@ void main() {
     });
   });
 
+  group('nadimak i raspon iznosa', () {
+    test('nadimak do 50 znakova prolazi, a duži dobija poruku s ograničenjem', () {
+      expect(Validators.nickname('a' * 50), isNull);
+      expect(Validators.nickname('a' * 51), 'Nadimak može imati najviše 50 znakova.');
+    });
+
+    test('"do" ispod "od" dobija poruku, a bez "od" ili s neispravnim iznosom nema poruke', () {
+      int? from = 20000;
+      final atLeast = Validators.amountAtLeast(() => from, Validators.amountRangeMessage);
+      expect(atLeast('50'), Validators.amountRangeMessage);
+      expect(atLeast('200'), isNull);
+      expect(atLeast('abc'), isNull);
+      from = null;
+      expect(atLeast('50'), isNull);
+    });
+  });
+
   group('napomena', () {
     test('do 200 znakova prolazi, a duža dobija poruku s ograničenjem', () {
       expect(Validators.note(''), isNull);

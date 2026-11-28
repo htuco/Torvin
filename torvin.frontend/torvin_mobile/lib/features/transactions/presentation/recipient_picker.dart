@@ -1,11 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:torvin_core/torvin_core.dart';
 
 import '../../../app/widgets/initials_avatar.dart';
+import '../../../app/widgets/search_field.dart';
 import '../../recipients/data/recipient_models.dart';
 import '../../recipients/data/recipient_providers.dart';
 
@@ -16,6 +14,7 @@ class RecipientPicker extends ConsumerStatefulWidget {
     super.key,
     required this.selected,
     required this.favorites,
+    required this.favoritesError,
     required this.onSelected,
     required this.onScan,
     required this.scanning,
@@ -26,17 +25,11 @@ class RecipientPicker extends ConsumerStatefulWidget {
   /// Pretraga kreće tek od ovoliko znakova, isto kao `RecipientService.MinQueryLength`.
   static const int minQueryLength = 3;
 
-  /// Najduža pretraga, isto kao `MaxLength` na `BaseSearchObject.Fts`.
-  static const int maxQueryLength = 100;
-
-  /// Koliko se čeka poslije zadnjeg slova prije pretrage, da svako slovo ne bude novi zahtjev.
-  static const Duration searchDelay = Duration(milliseconds: 300);
-
-  /// Koliko omiljenih stane u red iznad pretrage.
-  static const int favoritesShown = 8;
-
   final Recipient? selected;
   final List<FavoriteRecipientResponse> favorites;
+
+  /// Omiljeni se nisu učitali. Pretraga i QR i dalje rade.
+  final String? favoritesError;
   final ValueChanged<Recipient?> onSelected;
   final VoidCallback onScan;
 
@@ -54,27 +47,16 @@ class RecipientPicker extends ConsumerStatefulWidget {
 }
 
 class _RecipientPickerState extends ConsumerState<RecipientPicker> {
+  // Tekst pretrage ostaje i kad je polje sakriveno izborom, pa "Promijeni" vraća pretragu kakva je bila
   final _query = TextEditingController();
-  Timer? _debounce;
 
   /// Tekst za koji se traže rezultati, poslije zakašnjenja.
   String _search = '';
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _query.dispose();
     super.dispose();
-  }
-
-  void _onChanged(String value) {
-    widget.onEdited();
-    _debounce?.cancel();
-    _debounce = Timer(RecipientPicker.searchDelay, () {
-      if (mounted) {
-        setState(() => _search = value.trim());
-      }
-    });
   }
 
   @override
@@ -86,12 +68,16 @@ class _RecipientPickerState extends ConsumerState<RecipientPicker> {
         error: widget.error,
         onChange: () {
           widget.onEdited();
+          // Pretraga se odgađa u polju, koje nestane čim je primalac izabran. Poslije "Promijeni" se zato rezultati
+          // traže za tekst koji je ostao u polju
+          setState(() => _search = _query.text.trim());
           widget.onSelected(null);
         },
       );
     }
 
-    final favorites = widget.favorites.take(RecipientPicker.favoritesShown).toList();
+    final favorites = widget.favorites;
+    final favoritesError = widget.favoritesError;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -115,17 +101,18 @@ class _RecipientPickerState extends ConsumerState<RecipientPicker> {
           ),
           const SizedBox(height: AppConstants.spacingMD),
         ],
-        TorvinTextField(
+        if (favoritesError != null) ...[
+          InfoNote('Omiljeni primaoci se nisu učitali. $favoritesError'),
+          const SizedBox(height: AppConstants.spacingMD),
+        ],
+        SearchField(
           controller: _query,
           label: 'Primalac',
           hint: 'Ime, korisničko ime ili email',
-          helper: 'Unesite od ${RecipientPicker.minQueryLength} do ${RecipientPicker.maxQueryLength} znakova.',
-          textInputAction: TextInputAction.search,
-          inputFormatters: [LengthLimitingTextInputFormatter(RecipientPicker.maxQueryLength)],
-          // Provjera tek pri slanju: dok korisnik kuca pretragu, "obavezno" bi bila lažna greška
-          autovalidateMode: AutovalidateMode.disabled,
+          helper: 'Unesite od ${RecipientPicker.minQueryLength} do ${SearchField.maxLength} znakova.',
           forceErrorText: widget.error,
-          onChanged: _onChanged,
+          onChanged: (_) => widget.onEdited(),
+          onSearch: (text) => setState(() => _search = text),
           // Upisano ime nije izbor: primalac je izabran tek dodirom na rezultat, omiljenog ili QR kod
           validator: (_) => 'Izaberite primaoca iz rezultata, omiljenih ili QR koda.',
           suffix: widget.scanning

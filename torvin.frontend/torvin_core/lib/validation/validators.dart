@@ -130,6 +130,23 @@ abstract final class Validators {
 
   static String? note(String? value) => maxLength(noteMaxLength, noteMessage)(value);
 
+  /// Granica "do" ne smije biti ispod granice "od". `minCents` se čita pri validaciji, pa vidi trenutnu vrijednost
+  /// polja "od", a prazan ili neispravan iznos je posao `amount`.
+  static String? Function(String?) amountAtLeast(int? Function() minCents, String message) => (value) {
+        final min = minCents();
+        final cents = MoneyFormatter.parseCents(value ?? '');
+        return min != null && cents != null && cents < min ? message : null;
+      };
+
+  /// Isto kao `TransactionService.AmountRangeInvalid` na backendu.
+  static const String amountRangeMessage = 'Iznos do ne može biti manji od iznosa od.';
+
+  /// Nadimak omiljenog primaoca, isto kao `FavoriteRecipientInsertRequest.NicknameMaxLength` na backendu.
+  static const int nicknameMaxLength = 50;
+  static const String nicknameMessage = 'Nadimak može imati najviše $nicknameMaxLength znakova.';
+
+  static String? nickname(String? value) => maxLength(nicknameMaxLength, nicknameMessage)(value);
+
   /// Isto kao `TransactionService.InsufficientFunds` na backendu.
   static String insufficientFundsMessage(String last4) => 'Nedovoljno sredstava na kartici •••• $last4.';
 

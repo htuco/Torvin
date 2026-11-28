@@ -14,6 +14,7 @@ void main() {
     List<Map<String, dynamic>>? activeCards,
     int searchStatus = 200,
     Object? searchBody,
+    int favoritesStatus = 200,
     int createStatus = 201,
     Object? createBody,
     String expectedCode = 'torvin:v1:dobar',
@@ -21,7 +22,9 @@ void main() {
       FakeApi({
         'GET /card-statuses': (_) => json(200, page(cardStatusesJson)),
         'GET /cards': (_) => json(200, page(activeCards ?? [cardJson()])),
-        'GET /favorite-recipients': (_) => json(200, page([favoriteJson()])),
+        'GET /favorite-recipients': (_) => favoritesStatus == 200
+            ? json(200, page([favoriteJson()]))
+            : json(favoritesStatus, {'message': 'Došlo je do greške. Pokušajte ponovo.'}),
         'GET /recipients/search': (_) => json(searchStatus, searchBody ?? page([recipientJson()])),
         'POST /transactions': (_) => json(createStatus, createBody ?? transactionJson()),
         'POST /recipients/resolve-code': (request) {
@@ -209,6 +212,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
     expect(fieldText(tester, 'Primalac'), hasLength(100));
+  });
+
+  testWidgets('omiljeni koji se nisu učitali ne ruše formu, a ispod piše zašto', (tester) async {
+    await pumpAt(tester, api(favoritesStatus: 500), '/transactions/new');
+
+    expect(find.text('Omiljeni primaoci se nisu učitali. Došlo je do greške. Pokušajte ponovo.'), findsOneWidget);
+    await chooseMarko(tester);
+    expect(find.text('Promijeni'), findsOneWidget);
   });
 
   testWidgets('bez aktivne kartice forma se ne otvara, a nudi se dodavanje kartice', (tester) async {

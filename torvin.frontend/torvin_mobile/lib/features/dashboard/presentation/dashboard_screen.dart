@@ -44,6 +44,18 @@ class DashboardScreen extends ConsumerWidget {
               icon: const Icon(LucideIcons.send),
               label: const Text('Pošalji novac'),
             ),
+            const SizedBox(height: AppConstants.spacingRow),
+            OutlinedButton.icon(
+              onPressed: () => context.push(AppRoutes.transactions),
+              icon: const Icon(LucideIcons.arrowLeftRight),
+              label: const Text('Transakcije'),
+            ),
+            const SizedBox(height: AppConstants.spacingRow),
+            OutlinedButton.icon(
+              onPressed: () => context.push(AppRoutes.favorites),
+              icon: const Icon(LucideIcons.star),
+              label: const Text('Omiljeni primaoci'),
+            ),
           ],
         ),
       ),

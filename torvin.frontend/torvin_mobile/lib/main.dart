@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:torvin_core/torvin_core.dart';
 
@@ -17,6 +18,10 @@ class TorvinApp extends ConsumerWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Torvin',
+      // Materialovi tekstovi (izbor datuma, Back, meni teksta) su na bosanskom, kao i ostatak aplikacije
+      locale: const Locale('bs'),
+      supportedLocales: const [Locale('bs')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ref.watch(themeModeControllerProvider).value ?? ThemeMode.system,
